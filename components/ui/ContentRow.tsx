@@ -1,0 +1,28 @@
+import type { ContentItem } from "@/lib/data";
+import { ContentCard } from "@/components/ui/ContentCard";
+
+interface ContentRowProps {
+  title: string;
+  items: ContentItem[];
+  badge?: string;
+}
+
+export function ContentRow({ title, items, badge }: ContentRowProps) {
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-3">
+        <h2 className="text-lg font-bold text-white">{title}</h2>
+        {badge && (
+          <span className="rounded bg-gold-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        {items.map((item) => (
+          <ContentCard key={item.id} item={item} />
+        ))}
+      </div>
+    </section>
+  );
+}

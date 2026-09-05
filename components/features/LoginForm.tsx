@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
-import { motion } from "motion/react";
+import { Eye, EyeOff, Loader2, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 import { Logo } from "@/components/ui/Logo";
 import { AuthAlert, AuthAlertContainer, type AuthAlertType } from "@/components/ui/AuthAlert";
+import { LoginCinemaPanel } from "@/components/features/LoginCinemaPanel";
+import { PixelCursorTrail } from "@/components/ui/pixel-trail";
 import { FadeIn } from "@/components/ui/motion";
+import type { LoginCinemaMovie } from "@/lib/tmdb/types";
 
 type AuthMode = "login" | "register";
 
@@ -19,9 +21,7 @@ interface StatusMessage {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-zinc-500">
-      {children}
-    </label>
+    <label className="mb-2 block text-sm font-medium text-zinc-300">{children}</label>
   );
 }
 
@@ -30,17 +30,26 @@ function FieldError({ message }: { message?: string }) {
   return <p className="mt-1.5 text-xs text-red-400">{message}</p>;
 }
 
-export function LoginForm() {
+export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMovie[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<StatusMessage | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lumixtv-remember-email");
+    if (saved) {
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     const alert = searchParams.get("alert");
@@ -70,9 +79,7 @@ export function LoginForm() {
     setStatus(null);
 
     const payload =
-      mode === "login"
-        ? { email, password }
-        : { email, password, name };
+      mode === "login" ? { email, password } : { email, password, name };
 
     const schema = mode === "login" ? loginSchema : registerSchema;
     const result = schema.safeParse(payload);
@@ -89,6 +96,12 @@ export function LoginForm() {
         message: "Revisa los campos marcados antes de continuar.",
       });
       return;
+    }
+
+    if (rememberMe) {
+      localStorage.setItem("lumixtv-remember-email", email);
+    } else {
+      localStorage.removeItem("lumixtv-remember-email");
     }
 
     setLoading(true);
@@ -154,51 +167,45 @@ export function LoginForm() {
   }
 
   return (
-    <FadeIn className="relative z-10 w-full max-w-[420px]">
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-2xl shadow-black/50 backdrop-blur-xl">
-        <div className="border-b border-white/5 px-8 pb-6 pt-8">
-          <div className="mb-6 flex justify-center">
-            <Logo size="lg" align="center" />
-          </div>
-          <p className="text-center text-sm text-zinc-500">
-            {mode === "login"
-              ? "Accede a tu cuenta para continuar viendo"
-              : "Crea tu cuenta y empieza a disfrutar"}
-          </p>
-        </div>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <LoginCinemaPanel movies={cinemaMovies} />
 
-        <div className="px-8 pb-8 pt-6">
-          <div className="relative mb-6 flex rounded-xl bg-black/40 p-1">
-            {(["login", "register"] as const).map((tab) => (
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] px-6 py-10 sm:px-10 lg:px-16">
+        <PixelCursorTrail maxOpacity={0.35} pixelSize={8} zIndex={0} />
+
+        <div className="pointer-events-none absolute -right-20 top-0 h-72 w-72 rounded-full bg-gold-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-gold-600/5 blur-3xl" />
+
+        <FadeIn className="relative z-10 w-full max-w-md">
+          <div className="mb-8 lg:hidden">
+            <Logo size="md" align="left" />
+          </div>
+
+          <div className="mb-8">
+            <h1 className="font-display text-3xl font-bold tracking-wide text-white">
+              {mode === "login" ? "Bienvenido de nuevo" : "Crea tu cuenta"}
+            </h1>
+            <p className="mt-2 text-sm text-zinc-500">
+              {mode === "login" ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
               <button
-                key={tab}
                 type="button"
-                onClick={() => switchMode(tab)}
-                className={`relative z-10 flex-1 rounded-lg py-2.5 text-sm font-medium transition-colors ${
-                  mode === tab ? "text-gold-500" : "text-zinc-500 hover:text-zinc-300"
-                }`}
+                onClick={() => switchMode(mode === "login" ? "register" : "login")}
+                className="font-medium text-gold-400 transition-colors hover:text-gold-300"
               >
-                {tab === "login" ? "Iniciar sesión" : "Registrarse"}
-                {mode === tab && (
-                  <motion.div
-                    layoutId="auth-tab"
-                    className="absolute inset-0 -z-10 rounded-lg bg-gold-500/15 ring-1 ring-gold-500/20"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
+                {mode === "login" ? "Regístrate" : "Inicia sesión"}
               </button>
-            ))}
+            </p>
           </div>
 
           <AuthAlertContainer>
             {status && (
-              <div className="mb-5">
+              <div className="mb-6">
                 <AuthAlert type={status.type} message={status.message} />
               </div>
             )}
           </AuthAlertContainer>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {mode === "register" && (
               <div>
                 <FieldLabel>Nombre</FieldLabel>
@@ -213,7 +220,7 @@ export function LoginForm() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoComplete="name"
-                    className={`w-full rounded-xl border bg-black/30 py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 ${
+                    className={`w-full rounded-lg border bg-black/40 py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 ${
                       errors.name ? "border-red-500/50" : "border-border-subtle"
                     }`}
                   />
@@ -224,39 +231,29 @@ export function LoginForm() {
 
             <div>
               <FieldLabel>Correo electrónico</FieldLabel>
-              <div className="relative">
-                <Mail
-                  size={16}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600"
-                />
-                <input
-                  type="email"
-                  placeholder="tu@correo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className={`w-full rounded-xl border bg-black/30 py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 ${
-                    errors.email ? "border-red-500/50" : "border-border-subtle"
-                  }`}
-                />
-              </div>
+              <input
+                type="email"
+                placeholder="tu@correo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                className={`w-full rounded-lg border bg-black/40 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 ${
+                  errors.email ? "border-red-500/50" : "border-border-subtle"
+                }`}
+              />
               <FieldError message={errors.email} />
             </div>
 
             <div>
               <FieldLabel>Contraseña</FieldLabel>
               <div className="relative">
-                <Lock
-                  size={16}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600"
-                />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Mínimo 8 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  className={`w-full rounded-xl border bg-black/30 py-3 pl-10 pr-11 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 ${
+                  className={`w-full rounded-lg border bg-black/40 px-4 py-3 pr-11 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 ${
                     errors.password ? "border-red-500/50" : "border-border-subtle"
                   }`}
                 />
@@ -272,10 +269,24 @@ export function LoginForm() {
               <FieldError message={errors.password} />
             </div>
 
+            {mode === "login" && (
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-400">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-border-subtle bg-black/40 accent-gold-500"
+                  />
+                  Recordarme
+                </label>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gold-500 py-3.5 text-sm font-bold text-black transition-all hover:bg-gold-400 hover:shadow-lg hover:shadow-gold-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold-500 py-3.5 text-sm font-bold text-black transition-all hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -283,15 +294,15 @@ export function LoginForm() {
                   {mode === "login" ? "Iniciando sesión..." : "Creando cuenta..."}
                 </>
               ) : mode === "login" ? (
-                "Entrar"
+                "Iniciar sesión"
               ) : (
                 "Crear cuenta"
               )}
             </button>
           </form>
-        </div>
+        </FadeIn>
       </div>
-    </FadeIn>
+    </div>
   );
 }
 

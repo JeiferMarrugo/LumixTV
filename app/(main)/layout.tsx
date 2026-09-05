@@ -1,9 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
-import { AuthGuard } from "@/components/layout/AuthGuard";
+import { PixelCursorTrail } from "@/components/ui/pixel-trail";
 import { auth } from "@/lib/auth";
 
 export default async function MainLayout({
@@ -20,13 +19,11 @@ export default async function MainLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="ml-64 flex min-h-screen flex-1 flex-col">
-        <Header isAuthenticated />
-        <main className="flex-1">
-          <AuthGuard>{children}</AuthGuard>
-        </main>
+    <div className="relative flex min-h-screen flex-col">
+      <PixelCursorTrail maxOpacity={0.22} pixelSize={8} trailLength={28} zIndex={0} />
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <TopNav isAuthenticated />
+        <main className="flex-1">{children}</main>
         <Footer />
       </div>
     </div>

@@ -1,9 +1,19 @@
-import type { TmdbMovie, TmdbMovieDetail, TmdbPagedResponse, TmdbTvDetail, TmdbTvShow, TmdbVideosResponse } from "@/lib/tmdb/types";
+import type {
+  LoginCinemaMovie,
+  TmdbMovie,
+  TmdbMovieDetail,
+  TmdbPagedResponse,
+  TmdbTvDetail,
+  TmdbTvShow,
+  TmdbVideosResponse,
+} from "@/lib/tmdb/types";
 import {
   TMDB_API_BASE,
   TMDB_LANGUAGE,
   TMDB_REGION,
+  backdropUrl,
   getTmdbApiKey,
+  posterUrl,
 } from "@/lib/tmdb/config";
 import { findGenreIdByName, getMovieGenres, getTvGenres } from "@/lib/tmdb/genres";
 import {
@@ -139,6 +149,22 @@ export async function fetchSeries(options: {
     totalPages: data.total_pages,
     totalResults: data.total_results,
   };
+}
+
+export async function fetchLoginCinemaMovies(): Promise<LoginCinemaMovie[]> {
+  const data = await tmdbFetch<TmdbPagedResponse<TmdbMovie>>("/trending/movie/week");
+
+  return data.results
+    .filter((movie) => movie.poster_path)
+    .slice(0, 10)
+    .map((movie) => ({
+      id: String(movie.id),
+      title: movie.title,
+      poster: posterUrl(movie.poster_path, "w500")!,
+      backdrop:
+        backdropUrl(movie.backdrop_path, "w1280") ??
+        posterUrl(movie.poster_path, "w780")!,
+    }));
 }
 
 export async function fetchTrending(): Promise<{

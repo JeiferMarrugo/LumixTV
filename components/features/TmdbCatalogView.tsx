@@ -123,7 +123,9 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
           setItems([]);
         }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
 
@@ -141,7 +143,7 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
 
       <ContentFilters genres={genres} />
 
-      {loading && <StreamingLoader className="py-16" />}
+      {loading && <StreamingLoader className="py-16" label="" size="sm" />}
 
       {error && !loading && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -149,9 +151,9 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
         </div>
       )}
 
-      {!loading && !error && view === "table" ? (
+      {!loading && !error && items.length > 0 && view === "table" ? (
         <DataTable data={items} columns={columns} />
-      ) : !loading && !error ? (
+      ) : !loading && !error && items.length > 0 ? (
         <FadeInStagger className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {items.map((item) => (
             <StaggerItem key={item.id}>

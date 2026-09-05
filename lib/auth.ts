@@ -41,7 +41,13 @@ export const auth = betterAuth({
       },
     },
   }),
-  trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3000"],
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+  ],
   secret:
     process.env.BETTER_AUTH_SECRET ??
     "lumixtv-local-dev-secret-xK9mP2vQ7wR4nL8jH5tF3sA6bC1dE0g",

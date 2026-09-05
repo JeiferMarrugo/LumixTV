@@ -79,3 +79,10 @@ export interface TmdbVideo {
 export interface TmdbVideosResponse {
   results: TmdbVideo[];
 }
+
+export interface LoginCinemaMovie {
+  id: string;
+  title: string;
+  poster: string;
+  backdrop: string;
+}

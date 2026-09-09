@@ -43,7 +43,7 @@ export function PixelCursorTrail({
   const [pixels, setPixels] = useState<Pixel[]>([]);
   const pixelIdRef = useRef(0);
   const lastPositionRef = useRef<{ x: number; y: number } | null>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
 
   const createPixel = useCallback(
     (x: number, y: number) => {

@@ -377,7 +377,7 @@ export async function fetchAnimes(options: {
     data = await tmdbFetch<TmdbPagedResponse<TmdbTvShow>>("/discover/tv", params);
   }
 
-  let items = (data.results ?? []).map((show) => ({
+  let items: ContentItem[] = (data.results ?? []).map((show) => ({
     ...mapTmdbTvShow(show, genreMap),
     type: "anime" as const,
   }));

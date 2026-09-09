@@ -5,10 +5,17 @@ import {
   useEffect,
   useRef,
   useState,
-  type LucideIcon,
   type ReactNode,
 } from "react";
-import { ChevronLeft, ChevronRight, LayoutGrid, Search, Table2, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  Search,
+  Table2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ─── Panel shell ─── */

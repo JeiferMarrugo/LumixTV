@@ -3,6 +3,7 @@ import { AppProviders } from "@/components/providers/AppProviders";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="es" className={cn("dark font-sans", geist.variable)}>
       <body className="min-h-screen bg-black antialiased">
         <AppProviders>{children}</AppProviders>
+        <SpeedInsights />
       </body>
     </html>
   );

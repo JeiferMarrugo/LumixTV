@@ -1,23 +1,25 @@
-import { mockAnime } from "@/lib/data";
-import { ContentCard } from "@/components/ui/ContentCard";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { FadeIn, FadeInStagger, StaggerItem } from "@/components/ui/motion";
+import { CatalogGate } from "@/components/features/CatalogGate";
+import { StreamingLoader } from "@/components/ui/StreamingLoader";
+import { Suspense } from "react";
+
+function AnimeFallback() {
+  return (
+    <div className="px-8 py-8">
+      <StreamingLoader />
+    </div>
+  );
+}
 
 export default function AnimePage() {
   return (
-    <FadeIn className="px-8 py-8">
-      <PageHeader
+    <Suspense fallback={<AnimeFallback />}>
+      <CatalogGate
+        vimeusEndpoint="animes"
+        tmdbEndpoint="tv"
         title="Anime"
         subtitle="Tu destino para el mejor anime"
-        count={mockAnime.length}
+        vimeusOnly
       />
-      <FadeInStagger className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {mockAnime.map((anime) => (
-          <StaggerItem key={anime.id}>
-            <ContentCard item={anime} />
-          </StaggerItem>
-        ))}
-      </FadeInStagger>
-    </FadeIn>
+    </Suspense>
   );
 }

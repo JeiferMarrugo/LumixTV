@@ -21,6 +21,11 @@ interface TmdbCatalogViewProps {
   subtitle: string;
 }
 
+const CATEGORY_BY_ENDPOINT = {
+  movies: "movies",
+  tv: "series",
+} as const;
+
 const columns: LegacyColumnDef<ContentItem>[] = [
   {
     accessorKey: "title",
@@ -141,7 +146,7 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
         count={loading ? undefined : totalResults}
       />
 
-      <ContentFilters genres={genres} />
+      <ContentFilters genres={genres} category={CATEGORY_BY_ENDPOINT[endpoint]} />
 
       {loading && <StreamingLoader className="py-16" label="" size="sm" />}
 

@@ -1,36 +1,106 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useQueryState } from "nuqs";
-import { Loader2, RefreshCw, Search, X } from "lucide-react";
-import { LiveChannelCard } from "@/components/features/LiveChannelCard";
+import { RefreshCw, Radio, Trophy } from "lucide-react";
+import { LiveTvChannelGrid } from "@/components/features/LiveTvChannelGrid";
+import { LiveTvFilters } from "@/components/features/LiveTvFilters";
+import { LiveTvResultsBar } from "@/components/features/LiveTvResultsBar";
+import { LiveTvFootballSection } from "@/components/features/LiveTvFootballSection";
 import { LiveTvPlayer } from "@/components/features/LiveTvPlayer";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { FadeIn, FadeInStagger, StaggerItem } from "@/components/ui/motion";
+import { StreamingLoader } from "@/components/ui/StreamingLoader";
+import { FadeIn } from "@/components/ui/motion";
+import { cn } from "@/lib/utils";
+import { isAllCountries, normalizeCountryCode } from "@/lib/iptv/constants";
 import type { IptvCategory, LiveChannel } from "@/lib/iptv/types";
-import { LIVE_COUNTRY_OPTIONS } from "@/lib/iptv/constants";
 import { liveTvSearchParams } from "@/lib/nuqs/live-parsers";
 
-function LiveTvContent() {
-  const [country, setCountry] = useQueryState("country", liveTvSearchParams.country);
-  const [category, setCategory] = useQueryState("category", liveTvSearchParams.category);
-  const [search, setSearch] = useQueryState("q", liveTvSearchParams.q);
+type LiveSection = "channels" | "football";
+
+function LiveTvTabs({
+  section,
+  onChange,
+}: {
+  section: LiveSection;
+  onChange: (section: LiveSection) => void;
+}) {
+  return (
+    <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-1.5">
+      <button
+        type="button"
+        onClick={() => onChange("channels")}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors",
+          section === "channels"
+            ? "bg-gold-500/15 text-gold-400 ring-1 ring-gold-500/30"
+            : "bg-white/[0.04] text-zinc-400 hover:text-white",
+        )}
+      >
+        <Radio size={14} />
+        Canales TV
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("football")}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors",
+          section === "football"
+            ? "bg-gold-500/15 text-gold-400 ring-1 ring-gold-500/30"
+            : "bg-white/[0.04] text-zinc-400 hover:text-white",
+        )}
+      >
+        <Trophy size={14} />
+        Fútbol en vivo
+      </button>
+    </div>
+  );
+}
+
+function LiveTvChannelsSection() {
+  const [country] = useQueryState("country", liveTvSearchParams.country);
+  const [category] = useQueryState("category", liveTvSearchParams.category);
+  const [stream] = useQueryState("stream", liveTvSearchParams.stream);
+  const [hd] = useQueryState("hd", liveTvSearchParams.hd);
+  const [search] = useQueryState("search", liveTvSearchParams.search);
 
   const [channels, setChannels] = useState<LiveChannel[]>([]);
   const [categories, setCategories] = useState<IptvCategory[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState<LiveChannel | null>(null);
+  const filterKeyRef = useRef("");
 
   useEffect(() => {
     const controller = new AbortController();
+    const filterKey = `${country}|${category}|${stream}|${hd}|${search}`;
+    const filtersChanged = filterKeyRef.current !== filterKey;
+    filterKeyRef.current = filterKey;
+
+    if (filtersChanged) {
+      setPage(1);
+      if (page !== 1) return;
+    }
+
+    const append = page > 1 && !filtersChanged;
 
     async function load() {
-      setLoading(true);
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+
       setError(null);
 
-      const params = new URLSearchParams({ country });
+      const params = new URLSearchParams({
+        country: normalizeCountryCode(country),
+        page: String(page),
+      });
       if (category) params.set("category", category);
+      if (stream === "all") params.set("stream", "all");
+      if (hd) params.set("hd", "1");
       if (search) params.set("search", search);
 
       try {
@@ -38,93 +108,52 @@ function LiveTvContent() {
           signal: controller.signal,
         });
 
-        if (!res.ok) throw new Error("Error al cargar canales");
+        if (controller.signal.aborted) return;
 
         const data = (await res.json()) as {
-          channels: LiveChannel[];
-          categories: IptvCategory[];
+          channels?: LiveChannel[];
+          categories?: IptvCategory[];
+          total?: number;
+          hasNext?: boolean;
+          error?: string;
         };
 
-        setChannels(data.channels);
-        setCategories(data.categories);
+        if (controller.signal.aborted) return;
+
+        if (!res.ok) {
+          throw new Error(data.error ?? "Error al cargar canales");
+        }
+
+        setChannels((current) =>
+          append ? [...current, ...(data.channels ?? [])] : (data.channels ?? []),
+        );
+        setCategories(data.categories ?? []);
+        setTotal(data.total ?? 0);
+        setHasNext(Boolean(data.hasNext));
       } catch (err) {
+        if (controller.signal.aborted) return;
         if ((err as Error).name !== "AbortError") {
           setError("No se pudieron cargar los canales en vivo.");
         }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     }
 
     void load();
     return () => controller.abort();
-  }, [country, category, search]);
-
-  const hasFilters = Boolean(category || search);
+  }, [country, category, stream, hd, search, page]);
 
   return (
-    <FadeIn className="px-8 py-8">
-      <PageHeader
-        title="TV en Vivo"
-        subtitle="Canales en directo vía IPTV-org"
-        count={loading ? undefined : channels.length}
-      />
-
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-zinc-300 outline-none focus:border-gold-500/50"
-        >
-          {LIVE_COUNTRY_OPTIONS.map((opt) => (
-            <option key={opt.code} value={opt.code}>
-              {opt.flag} {opt.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value || null)}
-          className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-zinc-300 outline-none focus:border-gold-500/50"
-        >
-          <option value="">Todas las categorías</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-
-        <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value || null)}
-            placeholder="Buscar canal..."
-            className="w-full rounded-lg border border-border-subtle bg-surface-raised py-2 pl-9 pr-3 text-sm text-white outline-none focus:border-gold-500/50"
-          />
-        </div>
-
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={() => {
-              setCategory(null);
-              setSearch(null);
-            }}
-            className="flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-gold-500"
-          >
-            <X size={14} />
-            Limpiar
-          </button>
-        )}
-      </div>
+    <>
+      <LiveTvFilters categories={categories} />
 
       {loading ? (
-        <div className="flex justify-center py-24">
-          <Loader2 size={32} className="animate-spin text-gold-500" />
+        <div className="py-16">
+          <StreamingLoader label="Cargando canales en vivo..." />
         </div>
       ) : error ? (
         <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-8 text-center text-sm text-red-300">
@@ -136,16 +165,73 @@ function LiveTvContent() {
           <p className="text-sm text-zinc-400">No hay canales disponibles para estos filtros.</p>
         </div>
       ) : (
-        <FadeInStagger className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {channels.map((channel) => (
-            <StaggerItem key={channel.id}>
-              <LiveChannelCard channel={channel} onPlay={setPlaying} />
-            </StaggerItem>
-          ))}
-        </FadeInStagger>
+        <>
+          <LiveTvResultsBar
+            showing={channels.length}
+            total={total}
+            hint={
+              stream !== "all"
+                ? "Solo señal activa · desactiva el filtro para ver offline/bloqueados"
+                : isAllCountries(country) && !search && !category
+                  ? "Usa la búsqueda o elige un país para acotar resultados"
+                  : undefined
+            }
+          />
+
+          <LiveTvChannelGrid channels={channels} onPlay={setPlaying} />
+
+          {hasNext && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                disabled={loadingMore}
+                onClick={() => setPage((current) => current + 1)}
+                className={cn(
+                  "rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
+                  "bg-gold-500/15 text-gold-400 ring-1 ring-gold-500/30 hover:bg-gold-500/25",
+                  loadingMore && "opacity-60",
+                )}
+              >
+                {loadingMore ? "Cargando..." : "Cargar más canales"}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
-      {playing && <LiveTvPlayer channel={playing} onClose={() => setPlaying(null)} />}
+      {playing && (
+        <LiveTvPlayer
+          channel={playing}
+          onClose={() => setPlaying(null)}
+          onChannelChange={setPlaying}
+        />
+      )}
+
+    </>
+  );
+}
+
+function LiveTvContent() {
+  const [sectionParam, setSectionParam] = useQueryState("section", liveTvSearchParams.section);
+  const section: LiveSection = sectionParam === "football" ? "football" : "channels";
+
+  return (
+    <FadeIn className="px-8 py-8">
+      <PageHeader
+        title="En Vivo"
+        subtitle={
+          section === "football"
+            ? "Deportes en directo — fútbol, ligas y más"
+            : "Televisión en directo de todo el mundo"
+        }
+      />
+
+      <LiveTvTabs
+        section={section}
+        onChange={(next) => void setSectionParam(next === "channels" ? null : next)}
+      />
+
+      {section === "football" ? <LiveTvFootballSection /> : <LiveTvChannelsSection />}
     </FadeIn>
   );
 }
@@ -154,8 +240,8 @@ export function LiveTvView() {
   return (
     <Suspense
       fallback={
-        <div className="flex justify-center px-8 py-24">
-          <Loader2 size={32} className="animate-spin text-gold-500" />
+        <div className="px-8 py-16">
+          <StreamingLoader label="Cargando en vivo..." />
         </div>
       }
     >

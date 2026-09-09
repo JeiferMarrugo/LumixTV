@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthSession } from "@/lib/session";
 import { fetchContentDetail, fetchContentTrailer } from "@/lib/tmdb/service";
+import { isVimeusEmbedConfigured } from "@/lib/vimeus/config";
 
 export async function GET(
   _request: Request,
@@ -24,7 +25,11 @@ export async function GET(
       return NextResponse.json({ error: "Contenido no encontrado" }, { status: 404 });
     }
 
-    return NextResponse.json({ detail, trailerKey });
+    return NextResponse.json({
+      detail,
+      trailerKey,
+      playbackConfigured: isVimeusEmbedConfigured(),
+    });
   } catch {
     return NextResponse.json({ error: "No se pudo cargar el contenido" }, { status: 502 });
   }

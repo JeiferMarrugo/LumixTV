@@ -20,6 +20,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   notifications Notification[]
+  watchHistory  WatchHistory[]
 
   role       String?
   banned     Boolean?  @default(false)
@@ -96,4 +97,38 @@ model Notification {
 
   @@index([userId, read])
   @@map("notification")
+}
+
+model WatchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId   String
+  contentType String
+  title       String
+  image       String?
+  genre       String?
+  progress    Float    @default(0)
+  season      Int?
+  episode     Int?
+  watchedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, contentId])
+  @@index([userId, watchedAt])
+  @@index([contentId])
+  @@map("watch_history")
+}
+
+model ContentPlayStat {
+  contentId   String   @id
+  contentType String
+  title       String
+  image       String?
+  genre       String?
+  playCount   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([playCount])
+  @@map("content_play_stat")
 }

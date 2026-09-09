@@ -3,6 +3,7 @@ import type { TmdbFeatured, TmdbMovie, TmdbMovieDetail, TmdbTvDetail, TmdbTvShow
 import { backdropUrl, posterUrl } from "@/lib/tmdb/config";
 import type { ContentItem } from "@/lib/data";
 import { getContentById } from "@/lib/data";
+import { cleanHeroTitle, truncateHeroDescription } from "@/lib/hero-utils";
 
 const FALLBACK_POSTER =
   "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&q=85&auto=format&fit=crop";
@@ -54,12 +55,36 @@ export function mapTmdbFeatured(
   if (!movie) return null;
   return {
     id: `movie-${movie.id}`,
-    title: movie.title,
-    description: movie.overview?.trim() || "Descubre este título en LumixTV.",
+    title: cleanHeroTitle(movie.title),
+    description: truncateHeroDescription(movie.overview?.trim() || "Descubre este título en LumixTV."),
     genre: primaryGenre(movie.genre_ids, genreMap),
     year: extractYear(movie.release_date),
     rating: `${toRating(movie.vote_average)}/5`,
-    image: backdropUrl(movie.backdrop_path, "w1280") ?? posterUrl(movie.poster_path, "w780") ?? FALLBACK_POSTER,
+    image:
+      backdropUrl(movie.backdrop_path, "original") ??
+      backdropUrl(movie.backdrop_path, "w1280") ??
+      posterUrl(movie.poster_path, "w780") ??
+      FALLBACK_POSTER,
+  };
+}
+
+export function mapTmdbFeaturedTv(
+  show: TmdbTvShow | undefined,
+  genreMap: Map<number, string>,
+): TmdbFeatured | null {
+  if (!show) return null;
+  return {
+    id: `tv-${show.id}`,
+    title: cleanHeroTitle(show.name),
+    description: truncateHeroDescription(show.overview?.trim() || "Descubre este título en LumixTV."),
+    genre: primaryGenre(show.genre_ids, genreMap),
+    year: extractYear(show.first_air_date),
+    rating: `${toRating(show.vote_average)}/5`,
+    image:
+      backdropUrl(show.backdrop_path, "original") ??
+      backdropUrl(show.backdrop_path, "w1280") ??
+      posterUrl(show.poster_path, "w780") ??
+      FALLBACK_POSTER,
   };
 }
 

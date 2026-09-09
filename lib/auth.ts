@@ -7,6 +7,8 @@ import { sendVerificationEmail } from "@/lib/email";
 import { requireEmailVerification } from "@/lib/email-config";
 import { ac, roles } from "@/lib/permissions";
 import { DEFAULT_USER_ROLE, SUPER_ADMIN_ROLE } from "@/lib/roles";
+import { getTrustedOrigins } from "@/lib/auth-trusted-origins";
+import { SESSION_IDLE_TIMEOUT_MS } from "@/lib/session-inactivity";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
@@ -41,13 +43,11 @@ export const auth = betterAuth({
       },
     },
   }),
-  trustedOrigins: [
-    process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-  ],
+  trustedOrigins: getTrustedOrigins(),
+  session: {
+    expiresIn: Math.floor(SESSION_IDLE_TIMEOUT_MS / 1000),
+    updateAge: 60,
+  },
   secret:
     process.env.BETTER_AUTH_SECRET ??
     "lumixtv-local-dev-secret-xK9mP2vQ7wR4nL8jH5tF3sA6bC1dE0g",

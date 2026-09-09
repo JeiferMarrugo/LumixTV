@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Play, Star } from "lucide-react";
 import type { ContentItem } from "@/lib/data";
 import { contentHref } from "@/lib/content-id";
-import { useAppStore } from "@/lib/store/use-app-store";
 
 interface ContentCardProps {
   item: ContentItem;
@@ -14,7 +13,6 @@ interface ContentCardProps {
 
 export function ContentCard({ item }: ContentCardProps) {
   const router = useRouter();
-  const startWatching = useAppStore((s) => s.startWatching);
   const href = item.type === "live" ? "/live-tv" : contentHref(item.id);
 
   function handlePlay(e: React.MouseEvent) {
@@ -24,12 +22,7 @@ export function ContentCard({ item }: ContentCardProps) {
       router.push("/live-tv");
       return;
     }
-    startWatching({
-      id: item.id,
-      title: item.title,
-      image: item.image,
-    });
-    router.push(`${contentHref(item.id)}?play=1`);
+    router.push(contentHref(item.id));
   }
 
   return (
@@ -40,11 +33,11 @@ export function ContentCard({ item }: ContentCardProps) {
             src={item.image}
             alt={item.title}
             fill
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+            className="object-cover brightness-[1.03] saturate-[1.05] transition-transform duration-500 ease-out group-hover:scale-110"
             sizes="(max-width: 768px) 50vw, 200px"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-70" />
           <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
 
           {item.type !== "live" && (

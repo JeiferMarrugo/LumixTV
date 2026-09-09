@@ -1,111 +1,163 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useQueryState } from "nuqs";
+import { Calendar, Tag } from "lucide-react";
 import { searchParams } from "@/lib/nuqs/parsers";
-import { LayoutGrid, Table2, X } from "lucide-react";
+import { YearCalendarPicker } from "@/components/ui/YearCalendarPicker";
+import {
+  ActiveFiltersBar,
+  FilterChip,
+  FilterChipRow,
+  FilterClearButton,
+  FilterDivider,
+  FilterFieldLabel,
+  FilterPanel,
+  FilterSearch,
+  FilterViewToggle,
+} from "@/components/ui/filter-kit";
 
 const DEFAULT_GENRES = ["Acción", "Drama", "Comedia", "Ciencia ficción", "Terror", "Animación"];
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 12 }, (_, i) => currentYear - i);
+
+const SEARCH_PLACEHOLDERS = {
+  movies: "Buscar películas por título...",
+  series: "Buscar series por título...",
+  anime: "Buscar anime por título...",
+} as const;
+
+type CatalogCategory = keyof typeof SEARCH_PLACEHOLDERS;
 
 interface ContentFiltersProps {
   genres?: string[];
+  category?: CatalogCategory;
 }
 
-export function ContentFilters({ genres = DEFAULT_GENRES }: ContentFiltersProps) {
+export function ContentFilters({
+  genres = DEFAULT_GENRES,
+  category = "movies",
+}: ContentFiltersProps) {
   const [genre, setGenre] = useQueryState("genre", searchParams.genre);
   const [year, setYear] = useQueryState("year", searchParams.year);
-  const [minRating, setMinRating] = useQueryState("minRating", searchParams.minRating);
   const [view, setView] = useQueryState("view", searchParams.view);
+  const [q, setQ] = useQueryState("q", searchParams.q);
 
-  const hasFilters = genre || year || minRating;
+  const [localQuery, setLocalQuery] = useState(q || "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function clearAll() {
-    setGenre(null);
-    setYear(null);
-    setMinRating(null);
+  useEffect(() => {
+    setLocalQuery(q || "");
+  }, [q]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  function handleSearchChange(value: string) {
+    setLocalQuery(value);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setQ(value.trim() || null);
+    }, 350);
   }
 
+  const activeGenre = genre || "";
+  const hasFilters = Boolean(localQuery.trim() || activeGenre || year);
+
+  function clearAll() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setLocalQuery("");
+    setQ(null);
+    setGenre("");
+    setYear(null);
+  }
+
+  function clearSearch() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setLocalQuery("");
+    setQ(null);
+  }
+
+  const activeFilterChips = [
+    localQuery.trim() && {
+      key: "q",
+      label: `"${localQuery.trim()}"`,
+      onRemove: clearSearch,
+    },
+    activeGenre && {
+      key: "genre",
+      label: activeGenre,
+      onRemove: () => setGenre(""),
+    },
+    year && {
+      key: "year",
+      label: String(year),
+      onRemove: () => setYear(null),
+    },
+  ].filter(Boolean) as { key: string; label: string; onRemove: () => void }[];
+
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-3">
-      <select
-        value={genre}
-        onChange={(e) => setGenre(e.target.value || null)}
-        className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-zinc-300 outline-none focus:border-gold-500/50"
-      >
-        <option value="">Todos los géneros</option>
-        {genres.map((g) => (
-          <option key={g} value={g}>
-            {g}
-          </option>
-        ))}
-      </select>
+    <div className="relative z-10 mb-6">
+      <FilterPanel>
+        <div className="p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div className="min-w-0 flex-1">
+              <FilterSearch
+                value={localQuery}
+                onChange={handleSearchChange}
+                placeholder={SEARCH_PLACEHOLDERS[category]}
+                aria-label={SEARCH_PLACEHOLDERS[category]}
+                onClear={clearSearch}
+              />
+            </div>
 
-      <select
-        value={year ?? ""}
-        onChange={(e) => setYear(e.target.value ? Number(e.target.value) : null)}
-        className="rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-zinc-300 outline-none focus:border-gold-500/50"
-      >
-        <option value="">Todos los años</option>
-        {years.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
-        ))}
-      </select>
+            <div className="flex items-end gap-3">
+              <div className="w-full min-w-[140px] sm:w-44">
+                <FilterFieldLabel icon={Calendar}>Año</FilterFieldLabel>
+                <YearCalendarPicker
+                  value={year}
+                  onChange={setYear}
+                  minYear={1900}
+                  maxYear={currentYear}
+                  placeholder="Cualquier año"
+                />
+              </div>
 
-      <div className="flex gap-1">
-        {[3, 4].map((rating) => (
-          <button
-            key={rating}
-            type="button"
-            onClick={() => setMinRating(minRating === rating ? null : rating)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              minRating === rating
-                ? "bg-gold-500/20 text-gold-500"
-                : "border border-border-subtle text-zinc-400 hover:text-white"
-            }`}
-          >
-            {rating}+ ★
-          </button>
-        ))}
-      </div>
+              <FilterViewToggle
+                view={view === "table" ? "table" : "grid"}
+                onChange={setView}
+              />
+            </div>
+          </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-gold-500"
-          >
-            <X size={14} />
-            Limpiar
-          </button>
-        )}
+          <FilterDivider />
 
-        <div className="flex rounded-lg border border-border-subtle p-0.5">
-          <button
-            type="button"
-            onClick={() => setView("grid")}
-            className={`rounded-md p-2 transition-colors ${
-              view === "grid" ? "bg-gold-500/20 text-gold-500" : "text-zinc-500 hover:text-white"
-            }`}
-            aria-label="Vista grid"
-          >
-            <LayoutGrid size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("table")}
-            className={`rounded-md p-2 transition-colors ${
-              view === "table" ? "bg-gold-500/20 text-gold-500" : "text-zinc-500 hover:text-white"
-            }`}
-            aria-label="Vista tabla"
-          >
-            <Table2 size={16} />
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <FilterFieldLabel icon={Tag} inline>
+              Género
+            </FilterFieldLabel>
+            <div className="min-w-0 flex-1">
+              <FilterChipRow deps={[genres, activeGenre]}>
+                <FilterChip active={!activeGenre} onClick={() => setGenre("")}>
+                  Todos
+                </FilterChip>
+                {genres.map((g) => (
+                  <FilterChip key={g} active={activeGenre === g} onClick={() => setGenre(g)}>
+                    {g}
+                  </FilterChip>
+                ))}
+              </FilterChipRow>
+            </div>
+
+            {hasFilters && <FilterClearButton onClick={clearAll} />}
+          </div>
         </div>
-      </div>
+      </FilterPanel>
+
+      <ActiveFiltersBar chips={activeFilterChips} onClearAll={clearAll} />
     </div>
   );
 }

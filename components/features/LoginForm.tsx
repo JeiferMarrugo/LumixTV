@@ -65,6 +65,12 @@ export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMov
         message: "¡Tu correo ya está verificado! Inicia sesión para continuar.",
       });
     }
+    if (alert === "session_expired") {
+      setStatus({
+        type: "info",
+        message: "Tu sesión se cerró por inactividad (15 minutos). Vuelve a iniciar sesión.",
+      });
+    }
   }, [searchParams]);
 
   function switchMode(next: AuthMode) {

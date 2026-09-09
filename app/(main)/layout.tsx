@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { SessionInactivityGuard } from "@/components/auth/SessionInactivityGuard";
 import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 import { PixelCursorTrail } from "@/components/ui/pixel-trail";
@@ -20,10 +21,11 @@ export default async function MainLayout({
 
   return (
     <div className="relative flex min-h-screen flex-col">
+      <SessionInactivityGuard />
       <PixelCursorTrail maxOpacity={0.22} pixelSize={8} trailLength={28} zIndex={0} />
       <div className="relative z-10 flex min-h-screen flex-col">
         <TopNav isAuthenticated />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-24 lg:pb-0">{children}</main>
         <Footer />
       </div>
     </div>

@@ -80,6 +80,17 @@ export interface TmdbVideosResponse {
   results: TmdbVideo[];
 }
 
+export interface TmdbEpisode {
+  episode_number: number;
+  name: string;
+  runtime?: number;
+}
+
+export interface TmdbSeasonDetail {
+  season_number: number;
+  episodes: TmdbEpisode[];
+}
+
 export interface LoginCinemaMovie {
   id: string;
   title: string;

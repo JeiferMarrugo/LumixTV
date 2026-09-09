@@ -3,15 +3,17 @@ import Link from "next/link";
 interface LogoProps {
   size?: "sm" | "md" | "lg";
   align?: "left" | "center";
+  /** Sin subrayado decorativo — ideal para la notch bar */
+  compact?: boolean;
 }
 
 const configs = {
   sm: {
-    lumix: "text-xl",
-    tv: "text-[0.55rem] tracking-[0.45em]",
+    lumix: "text-[1.15rem]",
+    tv: "text-[0.5rem] tracking-[0.38em]",
     gap: "gap-2",
     line: "mt-1.5",
-    separator: "h-3",
+    separator: "h-3.5",
   },
   md: {
     lumix: "text-[1.75rem]",
@@ -29,7 +31,7 @@ const configs = {
   },
 };
 
-export function Logo({ size = "md", align = "center" }: LogoProps) {
+export function Logo({ size = "md", align = "center", compact = false }: LogoProps) {
   const cfg = configs[size];
   const alignClass = align === "center" ? "items-center" : "items-start";
 
@@ -40,27 +42,29 @@ export function Logo({ size = "md", align = "center" }: LogoProps) {
     >
       <div className={`flex items-center ${cfg.gap}`}>
         <span
-          className={`font-display font-semibold leading-none tracking-[0.2em] text-gold-500 transition-colors group-hover:text-gold-400 ${cfg.lumix}`}
+          className={`font-display font-bold leading-none tracking-[0.22em] text-gold-500 transition-colors group-hover:text-gold-400 ${cfg.lumix}`}
         >
           LUMIX
         </span>
 
         <span
-          className={`w-px shrink-0 bg-gradient-to-b from-transparent via-gold-500/50 to-transparent ${cfg.separator}`}
+          className={`w-px shrink-0 bg-gradient-to-b from-transparent via-gold-500/60 to-transparent ${cfg.separator}`}
           aria-hidden
         />
 
         <span
-          className={`font-brand font-medium leading-none text-zinc-500 transition-colors group-hover:text-gold-500/70 ${cfg.tv}`}
+          className={`font-brand font-semibold leading-none text-zinc-400 transition-colors group-hover:text-gold-500/80 ${cfg.tv}`}
         >
           TV
         </span>
       </div>
 
-      <div
-        className={`h-px w-full bg-gradient-to-r from-transparent via-gold-500/80 to-transparent transition-all group-hover:via-gold-400 ${cfg.line}`}
-        aria-hidden
-      />
+      {!compact && (
+        <div
+          className={`h-px w-full bg-gradient-to-r from-transparent via-gold-500/80 to-transparent transition-all group-hover:via-gold-400 ${cfg.line}`}
+          aria-hidden
+        />
+      )}
     </Link>
   );
 }

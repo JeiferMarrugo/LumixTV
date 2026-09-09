@@ -1,11 +1,12 @@
 "use client";
 
-import { TmdbCatalogView } from "@/components/features/TmdbCatalogView";
+import { CatalogGate } from "@/components/features/CatalogGate";
 
 export function SeriesView() {
   return (
-    <TmdbCatalogView
-      endpoint="tv"
+    <CatalogGate
+      vimeusEndpoint="series"
+      tmdbEndpoint="tv"
       title="Series"
       subtitle="Las mejores series para maratonear"
     />

@@ -10,7 +10,7 @@ const footerLinks = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-border-subtle bg-surface px-6 py-10">
+    <footer className="mt-auto border-t border-border-subtle bg-surface px-6 py-10 pb-28 lg:pb-10">
       <div className="flex flex-col items-center gap-6">
         <Logo size="sm" align="center" />
 

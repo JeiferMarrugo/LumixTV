@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "motion/react";
-import { Clapperboard, Film, Popcorn, Sparkles, TvMinimalPlay } from "lucide-react";
+import { Clapperboard, Film, Play, Popcorn, Sparkles, TvMinimalPlay } from "lucide-react";
 
 interface StreamingLoaderProps {
   label?: string;
@@ -10,32 +9,27 @@ interface StreamingLoaderProps {
   size?: "sm" | "md" | "lg";
 }
 
-const POPCORN_IMAGE =
-  "https://images.unsplash.com/photo-1574269900165-440282e5c8a?w=520&q=85&auto=format&fit=crop";
-const CINEMA_IMAGE =
-  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=520&q=85&auto=format&fit=crop";
-
 const config = {
   sm: {
     stage: "h-36 w-36",
-    image: "h-24 w-24",
+    hub: "h-24 w-24",
     icon: 20,
     badge: 28,
-    imageSizes: "96px",
+    play: 22,
   },
   md: {
     stage: "h-52 w-52",
-    image: "h-36 w-36",
+    hub: "h-36 w-36",
     icon: 24,
     badge: 34,
-    imageSizes: "144px",
+    play: 28,
   },
   lg: {
     stage: "h-64 w-64",
-    image: "h-44 w-44",
+    hub: "h-44 w-44",
     icon: 28,
     badge: 40,
-    imageSizes: "176px",
+    play: 34,
   },
 } as const;
 
@@ -53,7 +47,6 @@ export function StreamingLoader({
   size = "md",
 }: StreamingLoaderProps) {
   const s = config[size];
-  const heroImage = size === "lg" ? CINEMA_IMAGE : POPCORN_IMAGE;
 
   return (
     <div
@@ -104,19 +97,41 @@ export function StreamingLoader({
         ))}
 
         <motion.div
-          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-2 border-gold-500/35 bg-black shadow-[0_0_40px_rgba(212,160,23,0.18)] ${s.image}`}
+          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${s.hub}`}
           animate={{ scale: [1, 1.03, 1] }}
           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Image
-            src={heroImage}
-            alt=""
-            fill
-            className="object-cover"
-            sizes={s.imageSizes}
-            priority={size === "lg"}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gold-500/25 via-gold-500/5 to-transparent blur-sm" />
+
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-gold-500/35 bg-gradient-to-br from-zinc-900 via-black to-black shadow-[0_0_40px_rgba(212,160,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <motion.div
+              className="absolute inset-[18%] rounded-full border border-gold-500/15"
+              animate={{ rotate: 360, opacity: [0.35, 0.7, 0.35] }}
+              transition={{
+                rotate: { duration: 10, repeat: Infinity, ease: "linear" },
+                opacity: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
+              }}
+            />
+
+            <motion.div
+              className="absolute inset-[32%] rounded-full bg-gold-500/10"
+              animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.4, 0.85, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+
+            <motion.div
+              className="relative flex items-center justify-center rounded-full bg-gold-500/15 ring-1 ring-gold-500/40 shadow-[0_0_24px_rgba(212,160,23,0.35)]"
+              style={{ width: s.play + 20, height: s.play + 20 }}
+              animate={{ scale: [1, 1.06, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Play
+                size={s.play}
+                strokeWidth={1.5}
+                className="ml-1 fill-gold-500 text-gold-500 drop-shadow-[0_0_10px_rgba(212,160,23,0.6)]"
+              />
+            </motion.div>
+          </div>
         </motion.div>
 
         <motion.div

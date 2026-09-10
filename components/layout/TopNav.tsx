@@ -18,7 +18,7 @@ const navItems: NotchItemData[] = [
   { id: "movies", href: "/peliculas", label: "Películas", icon: Film },
   { id: "series", href: "/series", label: "Series", icon: Tv },
   { id: "anime", href: "/anime", label: "Anime", icon: Sparkles },
-  { id: "live", href: "/live-tv", label: "En Vivo", icon: Radio, badge: "Live" },
+  { id: "live", href: "/en-vivo", label: "En Vivo", icon: Radio, badge: "Live" },
 ];
 
 function SearchFallback() {
@@ -51,7 +51,7 @@ export function TopNav({ isAuthenticated = false }: TopNavProps) {
     if (pathname.startsWith("/peliculas")) return "movies";
     if (pathname.startsWith("/series")) return "series";
     if (pathname.startsWith("/anime")) return "anime";
-    if (pathname.startsWith("/live-tv") || pathname.startsWith("/futbol")) return "live";
+    if (pathname.startsWith("/en-vivo")) return "live";
     return "home";
   }, [pathname]);
 

@@ -13,15 +13,11 @@ interface ContentCardProps {
 
 export function ContentCard({ item }: ContentCardProps) {
   const router = useRouter();
-  const href = item.type === "live" ? "/live-tv" : contentHref(item.id);
+  const href = contentHref(item.id);
 
   function handlePlay(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (item.type === "live") {
-      router.push("/live-tv");
-      return;
-    }
     router.push(contentHref(item.id));
   }
 
@@ -40,30 +36,21 @@ export function ContentCard({ item }: ContentCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-70" />
           <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
 
-          {item.type !== "live" && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              <button
-                type="button"
-                onClick={handlePlay}
-                className="rounded-full bg-gold-500 p-3.5 text-black shadow-lg transition-transform hover:scale-110"
-                aria-label={`Reproducir ${item.title}`}
-              >
-                <Play size={22} fill="currentColor" />
-              </button>
-            </div>
-          )}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <button
+              type="button"
+              onClick={handlePlay}
+              className="rounded-full bg-gold-500 p-3.5 text-black shadow-lg transition-transform hover:scale-110"
+              aria-label={`Reproducir ${item.title}`}
+            >
+              <Play size={22} fill="currentColor" />
+            </button>
+          </div>
 
           <div className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full border border-gold-500/20 bg-black/60 px-2.5 py-1 text-xs font-bold text-gold-400 backdrop-blur-md">
             <Star size={11} className="fill-gold-400 text-gold-400" />
             {item.rating.toFixed(1)}
           </div>
-
-          {item.type === "live" && (
-            <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-600/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-              En Vivo
-            </div>
-          )}
 
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-500/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>

@@ -8,7 +8,7 @@ export interface ContentDetail {
   rating: number;
   poster: string;
   backdrop: string;
-  type: "movie" | "series" | "anime" | "live";
+  type: "movie" | "series" | "anime";
   runtime?: number;
   seasons?: number;
   episodes?: number;

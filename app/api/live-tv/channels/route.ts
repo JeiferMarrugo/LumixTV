@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { normalizeCountryCode } from "@/lib/iptv/constants";
-import { getLiveCategories, listLiveChannels } from "@/lib/iptv/service";
-import type { LiveChannelSource } from "@/lib/iptv/types";
 import { requireAuthSession } from "@/lib/session";
+import { listLiveChannels } from "@/lib/live-tv/service";
+
+const PAGE_SIZE = 24;
 
 export async function GET(request: Request) {
   const session = await requireAuthSession();
@@ -10,56 +10,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const country = normalizeCountryCode(searchParams.get("country"));
-  const category = searchParams.get("category")?.trim() || undefined;
-  const sourceParam = searchParams.get("source")?.trim();
-  const source =
-    sourceParam === "iptv-org" || sourceParam === "nexus" || sourceParam === "extra"
-      ? (sourceParam as LiveChannelSource)
-      : undefined;
-  const search = searchParams.get("search")?.trim() || undefined;
-  const football = searchParams.get("football") === "1";
-  const streamParam = searchParams.get("stream")?.trim();
-  const stream = streamParam === "all" ? "all" : "working";
-  const hdParam = searchParams.get("hd");
-  const hd = hdParam === "1" || hdParam === "true";
-  const page = Math.max(1, Number(searchParams.get("page") ?? 1) || 1);
+  const url = new URL(request.url);
+  const country = url.searchParams.get("country")?.trim() || undefined;
+  const category = url.searchParams.get("category")?.trim() || undefined;
+  const search = url.searchParams.get("q")?.trim() || undefined;
+  const hdOnly = url.searchParams.get("hd") === "true";
+  const page = Math.max(1, Number(url.searchParams.get("page") ?? 1) || 1);
 
   try {
-    const [
-      {
-        channels,
-        total,
-        hasNext,
-        limit,
-        verifiedCount,
-        workingCount,
-        hdCount,
-        catalogTotal,
-        nexusStats,
-      },
-      categories,
-    ] = await Promise.all([
-      listLiveChannels({ country, category, source, stream, hd, search, football, page }),
-      getLiveCategories(),
-    ]);
-
-    return NextResponse.json({
-      channels,
-      total,
-      page,
-      limit,
-      hasNext,
-      verifiedCount,
-      workingCount,
-      hdCount,
-      catalogTotal,
-      nexusStats,
-      categories,
+    const result = await listLiveChannels({
       country,
+      category,
+      search,
+      hdOnly,
+      page,
+      pageSize: PAGE_SIZE,
     });
-  } catch {
-    return NextResponse.json({ error: "No se pudieron cargar los canales" }, { status: 502 });
+
+    return NextResponse.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error al cargar el catálogo en vivo";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

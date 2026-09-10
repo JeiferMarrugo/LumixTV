@@ -7,7 +7,7 @@ import {
 } from "@/lib/auth-routes";
 import { requestHasSessionCookie } from "@/lib/auth-cookies";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (

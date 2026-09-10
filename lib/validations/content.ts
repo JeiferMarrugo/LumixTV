@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const contentTypeSchema = z.enum(["movie", "series", "anime", "live"]);
+export const contentTypeSchema = z.enum(["movie", "series", "anime"]);
 
 export const contentItemSchema = z.object({
   id: z.string().min(1),

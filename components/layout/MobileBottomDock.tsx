@@ -57,7 +57,7 @@ export function MobileBottomDock({
   }, [expanded]);
 
   const dockLeft = items.filter((item) => item.id === "home" || item.id === "movies");
-  const dockRight = items.filter((item) => item.id === "live");
+  const dockRight = items.filter((item) => item.id === "series" || item.id === "live");
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 lg:hidden">

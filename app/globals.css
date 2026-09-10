@@ -190,3 +190,44 @@ body {
     @apply font-sans;
   }
 }
+
+/* ── Volume slider ── */
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #d4a017;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(212, 160, 23, 0.5);
+  transition: transform 0.15s;
+}
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+.volume-slider::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border: none;
+  border-radius: 50%;
+  background: #d4a017;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+}
+.volume-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

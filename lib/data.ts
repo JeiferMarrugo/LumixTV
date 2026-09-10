@@ -5,7 +5,7 @@ export interface ContentItem {
   year: number;
   rating: number;
   image: string;
-  type: "movie" | "series" | "anime" | "live";
+  type: "movie" | "series" | "anime";
 }
 
 const cover = (id: string) =>
@@ -138,50 +138,10 @@ export const mockAnime: ContentItem[] = [
   },
 ];
 
-export const mockLiveChannels: ContentItem[] = [
-  {
-    id: "13",
-    title: "Lumix Sports HD",
-    genre: "Deportes",
-    year: 2024,
-    rating: 4.5,
-    image: cover("photo-1461896836934-ff607aa8771d"),
-    type: "live",
-  },
-  {
-    id: "14",
-    title: "Lumix News 24",
-    genre: "Noticias",
-    year: 2024,
-    rating: 4.3,
-    image: cover("photo-1504711434969-e33886168f5c"),
-    type: "live",
-  },
-  {
-    id: "15",
-    title: "Lumix Cinema",
-    genre: "Películas",
-    year: 2024,
-    rating: 4.6,
-    image: cover("photo-1489599849927-2ee91cede3ba"),
-    type: "live",
-  },
-  {
-    id: "16",
-    title: "Lumix Anime TV",
-    genre: "Anime",
-    year: 2024,
-    rating: 4.8,
-    image: cover("photo-1578632767115-351597cf2477"),
-    type: "live",
-  },
-];
-
 export const allContent: ContentItem[] = [
   ...mockMovies,
   ...mockSeries,
   ...mockAnime,
-  ...mockLiveChannels,
 ];
 
 export function getContentById(id: string) {

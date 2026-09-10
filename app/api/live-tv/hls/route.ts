@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
-import {
-  fetchStreamUpstream,
-  looksLikeM3u8,
-  rewriteM3u8Playlist,
-} from "@/lib/iptv/hls-proxy";
-import { getLiveStreamAt } from "@/lib/iptv/service";
 import { requireAuthSession } from "@/lib/session";
+import {
+  decodeProxyTarget,
+  fetchUpstream,
+  looksLikePlaylist,
+  rewritePlaylist,
+} from "@/lib/live-tv/hls-proxy";
+
+const PASSTHROUGH_HEADERS = [
+  "content-type",
+  "content-length",
+  "content-range",
+  "accept-ranges",
+];
 
 export async function GET(request: Request) {
   const session = await requireAuthSession();
@@ -13,72 +20,58 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { searchParams, origin } = new URL(request.url);
-  const channelId = searchParams.get("channelId")?.trim();
-  const target = searchParams.get("target")?.trim();
-  const sourceIndex = Math.max(0, Number(searchParams.get("source") ?? 0));
-
-  if (!channelId) {
-    return NextResponse.json({ error: "channelId requerido" }, { status: 400 });
+  const url = new URL(request.url);
+  const token = url.searchParams.get("s");
+  if (!token) {
+    return NextResponse.json({ error: "Falta el parámetro de stream" }, { status: 400 });
   }
 
-  const playback = await getLiveStreamAt(channelId, sourceIndex);
-  if (!playback) {
-    return NextResponse.json({ error: "Canal no disponible" }, { status: 404 });
+  const target = decodeProxyTarget(token);
+  if (!target) {
+    return NextResponse.json({ error: "Stream inválido" }, { status: 400 });
   }
 
-  const fetchUrl = target || playback.url;
-
+  let upstream: Response;
   try {
-    const upstream = await fetchStreamUpstream(playback, fetchUrl);
-
-    if (!upstream) {
-      return NextResponse.json({ error: "Stream bloqueado o no disponible" }, { status: 502 });
-    }
-
-    const contentType = upstream.headers.get("content-type");
-
-    if (looksLikeM3u8(fetchUrl, contentType)) {
-      const body = await upstream.text();
-
-      if (looksLikeM3u8(fetchUrl, contentType, body)) {
-        const rewritten = rewriteM3u8Playlist({
-          body,
-          baseUrl: fetchUrl,
-          origin,
-          channelId,
-          sourceIndex,
-        });
-
-        return new Response(rewritten, {
-          headers: {
-            "Content-Type": "application/vnd.apple.mpegurl",
-            "Cache-Control": "no-cache, no-store",
-          },
-        });
-      }
-    }
-
-    const headers = new Headers();
-    const lowerUrl = fetchUrl.toLowerCase();
-    if (contentType) {
-      headers.set("Content-Type", contentType);
-    } else if (lowerUrl.includes(".ts") || lowerUrl.includes(".mp2t")) {
-      headers.set("Content-Type", "video/mp2t");
-    } else if (lowerUrl.includes(".mp4")) {
-      headers.set("Content-Type", "video/mp4");
-    }
-    headers.set("Cache-Control", "no-cache, no-store");
-    headers.set("Accept-Ranges", "bytes");
-
-    const contentLength = upstream.headers.get("content-length");
-    if (contentLength) headers.set("Content-Length", contentLength);
-
-    return new Response(upstream.body, {
-      status: upstream.status,
-      headers,
-    });
+    upstream = await fetchUpstream(target, request.headers.get("range"));
   } catch {
-    return NextResponse.json({ error: "Error al reproducir el canal" }, { status: 502 });
+    return NextResponse.json(
+      { error: "No se pudo conectar con el origen del canal" },
+      { status: 502 },
+    );
   }
+
+  if (!upstream.ok && upstream.status !== 206) {
+    return NextResponse.json(
+      { error: "El canal no respondió correctamente" },
+      { status: upstream.status || 502 },
+    );
+  }
+
+  const contentType = upstream.headers.get("content-type");
+
+  if (looksLikePlaylist(contentType, target.url)) {
+    const body = await upstream.text();
+    const rewritten = rewritePlaylist(body, target, url.origin);
+
+    return new NextResponse(rewritten, {
+      status: 200,
+      headers: {
+        "content-type": "application/vnd.apple.mpegurl",
+        "cache-control": "no-store",
+      },
+    });
+  }
+
+  const headers = new Headers();
+  for (const name of PASSTHROUGH_HEADERS) {
+    const value = upstream.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  headers.set("cache-control", "no-store");
+
+  return new NextResponse(upstream.body, {
+    status: upstream.status,
+    headers,
+  });
 }

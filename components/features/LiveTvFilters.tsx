@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQueryState } from "nuqs";
-import { Globe, SlidersHorizontal, Tag } from "lucide-react";
-import type { IptvCategory } from "@/lib/iptv/types";
-import { LIVE_COUNTRY_OPTIONS } from "@/lib/iptv/constants";
-import { liveTvSearchParams } from "@/lib/nuqs/live-parsers";
+import { Globe2, Radio } from "lucide-react";
+import { liveSearchParams } from "@/lib/nuqs/live-parsers";
+import type { LiveCategoryOption, LiveCountryOption } from "@/lib/live-tv/types";
+import { DetailSelect } from "@/components/ui/DetailSelect";
 import {
   ActiveFiltersBar,
   FilterChip,
@@ -18,30 +18,22 @@ import {
 } from "@/components/ui/filter-kit";
 
 interface LiveTvFiltersProps {
-  categories?: IptvCategory[];
-  hideCategories?: boolean;
-  searchPlaceholder?: string;
+  categories: LiveCategoryOption[];
+  countries: LiveCountryOption[];
 }
 
-export function LiveTvFilters({
-  categories = [],
-  hideCategories = false,
-  searchPlaceholder = "Buscar canal por nombre (ESPN, Win Sports, TyC...)",
-}: LiveTvFiltersProps) {
-  const [country, setCountry] = useQueryState("country", liveTvSearchParams.country);
-  const [category, setCategory] = useQueryState("category", liveTvSearchParams.category);
-  const [stream, setStream] = useQueryState("stream", liveTvSearchParams.stream);
-  const [hd, setHd] = useQueryState("hd", liveTvSearchParams.hd);
-  const [search, setSearch] = useQueryState("search", liveTvSearchParams.search);
+export function LiveTvFilters({ categories, countries }: LiveTvFiltersProps) {
+  const [q, setQ] = useQueryState("q", liveSearchParams.q);
+  const [country, setCountry] = useQueryState("country", liveSearchParams.country);
+  const [category, setCategory] = useQueryState("category", liveSearchParams.category);
+  const [hd, setHd] = useQueryState("hd", liveSearchParams.hd);
 
-  const [localQuery, setLocalQuery] = useState(search || "");
+  const [localQuery, setLocalQuery] = useState(q || "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const workingOnly = stream !== "all";
-
   useEffect(() => {
-    setLocalQuery(search || "");
-  }, [search]);
+    setLocalQuery(q || "");
+  }, [q]);
 
   useEffect(() => {
     return () => {
@@ -51,152 +43,119 @@ export function LiveTvFilters({
 
   function handleSearchChange(value: string) {
     setLocalQuery(value);
-
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      setSearch(value.trim() || null);
+      setQ(value.trim() || null);
     }, 350);
-  }
-
-  const activeCategory = category || "";
-  const hasFilters = Boolean(localQuery.trim() || activeCategory || !workingOnly || hd);
-
-  const countryLabel =
-    LIVE_COUNTRY_OPTIONS.find((opt) => opt.code === country)?.name ?? country;
-
-  function clearAll() {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    setLocalQuery("");
-    setSearch(null);
-    setCategory(null);
-    setStream(null);
-    setHd(null);
   }
 
   function clearSearch() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setLocalQuery("");
-    setSearch(null);
+    setQ(null);
   }
 
+  const hasFilters = Boolean(localQuery.trim() || country || category || hd);
+
+  function clearAll() {
+    clearSearch();
+    setCountry("");
+    setCategory("");
+    setHd(false);
+  }
+
+  const countryOptions = [
+    { value: "", label: "Todos los países" },
+    ...countries.map((c) => ({
+      value: c.code,
+      label: `${c.flag ? `${c.flag} ` : ""}${c.name} (${c.count})`,
+      badge: c.code,
+    })),
+  ];
+
   const activeFilterChips = [
-    {
+    localQuery.trim() && { key: "q", label: `"${localQuery.trim()}"`, onRemove: clearSearch },
+    country && {
       key: "country",
-      label: countryLabel,
-      onRemove: null as (() => void) | null,
+      label: countries.find((c) => c.code === country)?.name ?? country,
+      onRemove: () => setCountry(""),
     },
-    localQuery.trim() && {
-      key: "q",
-      label: `"${localQuery.trim()}"`,
-      onRemove: clearSearch,
-    },
-    activeCategory && {
+    category && {
       key: "category",
-      label: categories.find((cat) => cat.id === activeCategory)?.name ?? activeCategory,
-      onRemove: () => setCategory(null),
+      label: categories.find((c) => c.id === category)?.name ?? category,
+      onRemove: () => setCategory(""),
     },
-    !workingOnly && {
-      key: "stream",
-      label: "Incluye sin señal",
-      onRemove: () => setStream(null),
-    },
-    hd && {
-      key: "hd",
-      label: "HD+",
-      onRemove: () => setHd(null),
-    },
-  ].filter(Boolean) as { key: string; label: string; onRemove: (() => void) | null }[];
+    hd && { key: "hd", label: "Solo HD", onRemove: () => setHd(false) },
+  ].filter(Boolean) as { key: string; label: string; onRemove: () => void }[];
 
   return (
     <div className="relative z-10 mb-6">
       <FilterPanel>
         <div className="p-4 sm:p-5">
-          <FilterSearch
-            value={localQuery}
-            onChange={handleSearchChange}
-            placeholder={searchPlaceholder}
-            aria-label="Buscar canal"
-            onClear={clearSearch}
-          />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+            <div className="min-w-0 flex-1">
+              <FilterSearch
+                value={localQuery}
+                onChange={handleSearchChange}
+                placeholder="Buscar canal por nombre..."
+                aria-label="Buscar canal por nombre"
+                onClear={clearSearch}
+              />
+            </div>
+
+            <div className="flex items-end gap-3">
+              <DetailSelect
+                label="País"
+                value={country || ""}
+                onChange={(value) => setCountry(value || "")}
+                options={countryOptions}
+                menuMinWidth={260}
+              />
+
+              <button
+                type="button"
+                onClick={() => setHd(!hd)}
+                className={
+                  hd
+                    ? "flex h-12 shrink-0 items-center gap-2 rounded-xl border border-gold-500/40 bg-gold-500/15 px-4 text-sm font-semibold text-gold-400 transition-all"
+                    : "flex h-12 shrink-0 items-center gap-2 rounded-xl border border-white/[0.08] bg-black/35 px-4 text-sm text-zinc-400 transition-all hover:border-gold-500/25 hover:text-zinc-200"
+                }
+              >
+                <Radio size={15} />
+                Solo HD
+              </button>
+            </div>
+          </div>
 
           <FilterDivider />
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <FilterFieldLabel icon={SlidersHorizontal} inline>
-                Señal
-              </FilterFieldLabel>
-              <div className="min-w-0 flex-1">
-                <FilterChipRow deps={[workingOnly, hd]}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <FilterFieldLabel icon={Globe2} inline>
+              Categoría
+            </FilterFieldLabel>
+            <div className="min-w-0 flex-1">
+              <FilterChipRow deps={[categories, category]}>
+                <FilterChip active={!category} onClick={() => setCategory("")}>
+                  Todas
+                </FilterChip>
+                {categories.map((c) => (
                   <FilterChip
-                    active={workingOnly}
-                    onClick={() => void setStream(workingOnly ? "all" : null)}
+                    key={c.id}
+                    active={category === c.id}
+                    onClick={() => setCategory(c.id)}
                   >
-                    Solo activos
+                    {c.name} · {c.count}
                   </FilterChip>
-                  <FilterChip
-                    active={Boolean(hd)}
-                    onClick={() => void setHd(hd ? null : true)}
-                  >
-                    HD+
-                  </FilterChip>
-                </FilterChipRow>
-              </div>
+                ))}
+              </FilterChipRow>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <FilterFieldLabel icon={Globe} inline>
-                País
-              </FilterFieldLabel>
-              <div className="min-w-0 flex-1">
-                <FilterChipRow deps={[country]}>
-                  {LIVE_COUNTRY_OPTIONS.map((opt) => (
-                    <FilterChip
-                      key={opt.code}
-                      active={country === opt.code}
-                      onClick={() => setCountry(opt.code)}
-                    >
-                      {opt.flag} {opt.name}
-                    </FilterChip>
-                  ))}
-                </FilterChipRow>
-              </div>
-            </div>
-
-            {!hideCategories && categories.length > 0 && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <FilterFieldLabel icon={Tag} inline>
-                  Categoría
-                </FilterFieldLabel>
-                <div className="min-w-0 flex-1">
-                  <FilterChipRow deps={[categories, activeCategory]}>
-                    <FilterChip active={!activeCategory} onClick={() => setCategory(null)}>
-                      Todas
-                    </FilterChip>
-                    {categories.map((cat) => (
-                      <FilterChip
-                        key={cat.id}
-                        active={activeCategory === cat.id}
-                        onClick={() => setCategory(cat.id)}
-                      >
-                        {cat.name}
-                      </FilterChip>
-                    ))}
-                  </FilterChipRow>
-                </div>
-              </div>
-            )}
-
-            {hasFilters && (
-              <div className="flex justify-end">
-                <FilterClearButton onClick={clearAll} />
-              </div>
-            )}
+            {hasFilters && <FilterClearButton onClick={clearAll} />}
           </div>
         </div>
       </FilterPanel>
 
-      <ActiveFiltersBar chips={activeFilterChips} onClearAll={hasFilters ? clearAll : undefined} />
+      <ActiveFiltersBar chips={activeFilterChips} onClearAll={clearAll} />
     </div>
   );
 }

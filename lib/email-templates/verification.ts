@@ -90,7 +90,7 @@ export function buildVerificationEmail({ name, url }: VerificationEmailParams) {
                 Hola, ${escapeHtml(displayName)}
               </h1>
               <p style="margin:0;font-size:15px;line-height:1.65;color:${MUTED};">
-                Tu cuenta está casi lista. Solo falta un paso para desbloquear películas, series, anime y TV en vivo.
+                Tu cuenta está casi lista. Solo falta un paso para desbloquear películas, series y anime.
               </p>
             </td>
           </tr>

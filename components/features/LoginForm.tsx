@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
@@ -30,9 +30,20 @@ function FieldError({ message }: { message?: string }) {
   return <p className="mt-1.5 text-xs text-red-400">{message}</p>;
 }
 
+function resolvePostAuthDestination(callbackUrl: string | null) {
+  if (callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")) {
+    return callbackUrl;
+  }
+  return "/";
+}
+
+function redirectAfterAuth(callbackUrl: string | null) {
+  window.location.replace(resolvePostAuthDestination(callbackUrl));
+}
+
 export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMovie[] }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectingRef = useRef(false);
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +61,17 @@ export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMov
       setRememberMe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (redirectingRef.current) return;
+
+    void authClient.getSession().then(({ data }) => {
+      if (data?.session && !redirectingRef.current) {
+        redirectingRef.current = true;
+        redirectAfterAuth(searchParams.get("callbackUrl"));
+      }
+    });
+  }, [searchParams]);
 
   useEffect(() => {
     const alert = searchParams.get("alert");
@@ -81,6 +103,8 @@ export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMov
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || redirectingRef.current) return;
+
     setErrors({});
     setStatus(null);
 
@@ -124,16 +148,16 @@ export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMov
           return;
         }
 
+        redirectingRef.current = true;
         setStatus({
           type: "success",
           message: "¡Sesión iniciada correctamente! Redirigiendo...",
         });
-        const callbackUrl = searchParams.get("callbackUrl");
-        const destination =
-          callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
-            ? callbackUrl
-            : "/";
-        setTimeout(() => router.push(destination), 1400);
+
+        // Confirmar que la cookie de sesión quedó persistida antes de navegar.
+        await authClient.getSession();
+        redirectAfterAuth(searchParams.get("callbackUrl"));
+        return;
       } else {
         const { error } = await authClient.signUp.email({ email, password, name });
 
@@ -154,13 +178,17 @@ export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMov
         });
 
         if (process.env.NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_VERIFICATION === "false") {
-          setTimeout(() => router.push("/"), 1400);
-        } else {
-          setTimeout(
-            () => router.push(`/verificar-correo?email=${encodeURIComponent(email)}`),
-            2000,
-          );
+          redirectingRef.current = true;
+          await authClient.getSession();
+          redirectAfterAuth(null);
+          return;
         }
+
+        redirectingRef.current = true;
+        window.location.replace(
+          `/verificar-correo?email=${encodeURIComponent(email)}`,
+        );
+        return;
       }
     } catch {
       setStatus({
@@ -168,7 +196,9 @@ export function LoginForm({ cinemaMovies = [] }: { cinemaMovies?: LoginCinemaMov
         message: "Error de conexión. Verifica tu internet e inténtalo de nuevo.",
       });
     } finally {
-      setLoading(false);
+      if (!redirectingRef.current) {
+        setLoading(false);
+      }
     }
   }
 

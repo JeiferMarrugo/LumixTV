@@ -5,14 +5,7 @@ import {
   isAuthPublicApiPath,
   isAuthPublicPath,
 } from "@/lib/auth-routes";
-
-function hasSessionCookie(request: NextRequest) {
-  return request.cookies.getAll().some(
-    (cookie) =>
-      cookie.name === "better-auth.session_token" ||
-      cookie.name.startsWith("better-auth.session_token."),
-  );
-}
+import { requestHasSessionCookie } from "@/lib/auth-cookies";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,7 +22,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!hasSessionCookie(request)) {
+  if (!requestHasSessionCookie(request.cookies.getAll())) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }

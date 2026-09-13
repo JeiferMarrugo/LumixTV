@@ -8,6 +8,8 @@
  * al cliente.
  */
 
+export type LiveStreamProvider = "nexus" | "iptv-org";
+
 export interface LiveStreamSource {
   /** URL original del stream (m3u8/mpd). */
   url: string;
@@ -19,6 +21,8 @@ export interface LiveStreamSource {
   quality?: string | null;
   /** Último health check de Nexus. */
   online?: boolean;
+  /** Origen del catálogo (Nexus o iptv-org). */
+  provider?: LiveStreamProvider;
 }
 
 export interface LiveChannel {

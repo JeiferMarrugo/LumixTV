@@ -24,9 +24,17 @@ export interface RelatedLiveChannel {
 
 interface LiveTvRelatedPanelProps {
   related: RelatedLiveChannel[];
+  groupLabel?: string | null;
   activeChannelId: string;
   onSelect: (channelId: string, channelName: string) => void;
   mode?: "mobile" | "desktop" | "both";
+}
+
+function formatRelatedSubtitle(relatedCount: number, groupLabel?: string | null) {
+  if (groupLabel) {
+    return `Otros canales de ${groupLabel} · ${relatedCount} sugerencia${relatedCount === 1 ? "" : "s"}`;
+  }
+  return `Misma categoría o país · ${relatedCount} sugerencia${relatedCount === 1 ? "" : "s"}`;
 }
 
 function RelatedCard({
@@ -116,6 +124,7 @@ function RelatedCard({
 
 function MobileRelatedSheet({
   related,
+  groupLabel,
   activeChannelId,
   onSelect,
 }: LiveTvRelatedPanelProps) {
@@ -188,7 +197,9 @@ function MobileRelatedSheet({
             <div className="min-w-0 text-left">
               <p className="text-xs font-semibold text-white">También en vivo</p>
               <p className="text-[11px] text-zinc-500">
-                {related.length} canal{related.length === 1 ? "" : "es"} · desliza para ver más
+                {groupLabel
+                  ? `Otros de ${groupLabel} · desliza para ver más`
+                  : `${related.length} canal${related.length === 1 ? "" : "es"} · desliza para ver más`}
               </p>
             </div>
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-gold-400">
@@ -225,6 +236,7 @@ function MobileRelatedSheet({
 
 function DesktopRelatedRail({
   related,
+  groupLabel,
   activeChannelId,
   onSelect,
 }: LiveTvRelatedPanelProps) {
@@ -274,7 +286,7 @@ function DesktopRelatedRail({
             También en vivo
           </p>
           <p className="mt-0.5 text-xs text-zinc-600">
-            Misma categoría o país · {related.length} sugerencias
+            {formatRelatedSubtitle(related.length, groupLabel)}
           </p>
         </div>
 

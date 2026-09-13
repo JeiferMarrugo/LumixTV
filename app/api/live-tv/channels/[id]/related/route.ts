@@ -40,10 +40,9 @@ export async function GET(
 
   const related = await getRelatedLiveChannels(channel);
 
-
-
   return NextResponse.json({
-    items: related.map((item) => ({
+    groupLabel: related.groupLabel,
+    items: related.items.map((item) => ({
       id: item.id,
       name: item.name,
       logo: item.logo,

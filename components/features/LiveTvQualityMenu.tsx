@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 export interface LiveQualitySource {
   quality?: string | null;
   online?: boolean;
+  provider?: "nexus" | "iptv-org";
 }
 
 interface LiveTvQualityMenuProps {
@@ -112,7 +113,11 @@ export function LiveTvQualityMenu({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{label}</p>
                         <p className="mt-0.5 text-[10px] uppercase tracking-wide text-zinc-500">
-                          {source.online ? "Señal online" : "Señal alternativa"}
+                          {source.provider === "iptv-org"
+                            ? "Alternativa iptv-org"
+                            : source.online
+                              ? "Nexus · online"
+                              : "Nexus · alternativa"}
                         </p>
                       </div>
                       {selected && <Check size={16} className="shrink-0 text-gold-400" />}

@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const CONNECT_TIMEOUT_SEC = 60;
+const CONNECT_TIMEOUT_SEC = 18;
 const RING_RADIUS = 40;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 

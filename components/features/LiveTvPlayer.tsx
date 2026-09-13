@@ -52,6 +52,7 @@ interface LiveSource {
   needsProxy: boolean;
   quality?: string | null;
   online?: boolean;
+  provider?: "nexus" | "iptv-org";
 }
 
 function pickPlaybackUrl(source: LiveSource, forceProxy: boolean) {
@@ -165,6 +166,7 @@ export function LiveTvPlayer({
   const [sources, setSources] = useState<LiveSource[]>([]);
 
   const [related, setRelated] = useState<RelatedLiveChannel[]>([]);
+  const [relatedGroupLabel, setRelatedGroupLabel] = useState<string | null>(null);
 
   const [sourceIndex, setSourceIndex] = useState(0);
 
@@ -272,6 +274,7 @@ export function LiveTvPlayer({
             channelId: data.channel.id,
             fuentes: data.sources.map((source, index) => ({
               indice: index,
+              proveedor: source.provider ?? "nexus",
               urlDirecta: source.url,
               urlProxy: source.proxyUrl,
               calidad: source.quality ?? "—",
@@ -331,9 +334,15 @@ export function LiveTvPlayer({
 
         );
 
-        const data = (await res.json()) as { items?: RelatedLiveChannel[] };
+        const data = (await res.json()) as {
+          items?: RelatedLiveChannel[];
+          groupLabel?: string | null;
+        };
 
-        if (res.ok) setRelated(data.items ?? []);
+        if (res.ok) {
+          setRelated(data.items ?? []);
+          setRelatedGroupLabel(data.groupLabel ?? null);
+        }
 
       } catch {
 
@@ -373,6 +382,7 @@ export function LiveTvPlayer({
         urlReproduccion: playbackUrl,
         calidad: source.quality ?? "—",
         online: source.online ?? false,
+        proveedor: source.provider ?? "nexus",
       },
     );
 
@@ -395,9 +405,13 @@ export function LiveTvPlayer({
 
 
     let forceProxy = Boolean(source.needsProxy);
+    let triedProxy = forceProxy;
 
     function tryNextSource() {
       if (sourceIndex + 1 < sources.length) {
+        console.warn(
+          `[LUMIXTV En Vivo] Fuente ${sourceIndex + 1}/${sources.length} falló — probando siguiente`,
+        );
         setSourceIndex((index) => index + 1);
       } else {
         setFailed(true);
@@ -406,11 +420,19 @@ export function LiveTvPlayer({
       }
     }
 
-    function handlePlaybackFailure() {
-      if (!forceProxy) {
+    function isDeadStreamStatus(status?: number) {
+      return status === 400 || status === 403 || status === 404 || status === 410;
+    }
+
+    function handlePlaybackFailure(httpStatus?: number) {
+      const deadUrl = isDeadStreamStatus(httpStatus);
+
+      if (!triedProxy && !deadUrl) {
+        triedProxy = true;
         forceProxy = true;
         return true;
       }
+
       tryNextSource();
       return false;
     }
@@ -473,22 +495,15 @@ export function LiveTvPlayer({
     if (Hls.isSupported()) {
 
       const hls = new Hls({
-
         enableWorker: true,
-
         lowLatencyMode: true,
-
         backBufferLength: 30,
-
-        manifestLoadingTimeOut: 20000,
-
-        manifestLoadingMaxRetry: 3,
-
-        levelLoadingTimeOut: 20000,
-
-        fragLoadingTimeOut: 20000,
-
-        fragLoadingMaxRetry: 4,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 1,
+        levelLoadingTimeOut: 12000,
+        levelLoadingMaxRetry: 1,
+        fragLoadingTimeOut: 12000,
+        fragLoadingMaxRetry: 2,
       });
 
       hlsRef.current = hls;
@@ -505,7 +520,8 @@ export function LiveTvPlayer({
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (!data.fatal) return;
-        if (handlePlaybackFailure()) {
+        const httpStatus = data.response?.code;
+        if (handlePlaybackFailure(httpStatus)) {
           hls.loadSource(source.proxyUrl);
           return;
         }
@@ -772,9 +788,9 @@ export function LiveTvPlayer({
 
               <p className="mt-2 max-w-sm text-sm text-zinc-400">
 
-                No pudimos reproducir <span className="text-zinc-200">{channelName}</span>.
-
-                Prueba otro canal o reintenta en unos segundos.
+                Probamos {sources.length} fuente{sources.length === 1 ? "" : "s"} para{" "}
+                <span className="text-zinc-200">{channelName}</span> sin éxito. Puede ser un
+                bloqueo regional o señal caída en el origen.
 
               </p>
 
@@ -992,6 +1008,7 @@ export function LiveTvPlayer({
               <LiveTvRelatedPanel
                 mode="desktop"
                 related={related}
+                groupLabel={relatedGroupLabel}
                 activeChannelId={channelId}
                 onSelect={(id, name) => onSelectRelated?.(id, name)}
               />
@@ -1004,6 +1021,7 @@ export function LiveTvPlayer({
           <LiveTvRelatedPanel
             mode="mobile"
             related={related}
+            groupLabel={relatedGroupLabel}
             activeChannelId={channelId}
             onSelect={(id, name) => onSelectRelated?.(id, name)}
           />

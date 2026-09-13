@@ -21,11 +21,6 @@ interface TmdbCatalogViewProps {
   subtitle: string;
 }
 
-const CATEGORY_BY_ENDPOINT = {
-  movies: "movies",
-  tv: "series",
-} as const;
-
 const columns: LegacyColumnDef<ContentItem>[] = [
   {
     accessorKey: "title",
@@ -41,7 +36,7 @@ const columns: LegacyColumnDef<ContentItem>[] = [
             sizes="28px"
           />
         </div>
-        <span className="font-medium text-white">{row.original.title}</span>
+        <span className="font-medium text-zinc-900 dark:text-white">{row.original.title}</span>
       </div>
     ),
   },
@@ -139,14 +134,21 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
   }, [endpoint, page, filters.q, filters.genre, filters.year, filters.minRating]);
 
   return (
-    <FadeIn className="px-8 py-8">
+    <FadeIn className="px-4 py-6 sm:px-8 sm:py-8">
       <PageHeader
         title={title}
         subtitle={subtitle}
         count={loading ? undefined : totalResults}
       />
 
-      <ContentFilters genres={genres} category={CATEGORY_BY_ENDPOINT[endpoint]} />
+      <ContentFilters
+        genres={genres}
+        searchPlaceholder={
+          endpoint === "movies"
+            ? "Buscar películas por título..."
+            : "Buscar series por título..."
+        }
+      />
 
       {loading && <StreamingLoader className="py-16" label="" size="sm" />}
 
@@ -159,7 +161,7 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
       {!loading && !error && items.length > 0 && view === "table" ? (
         <DataTable data={items} columns={columns} />
       ) : !loading && !error && items.length > 0 ? (
-        <FadeInStagger className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <FadeInStagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6">
           {items.map((item) => (
             <StaggerItem key={item.id}>
               <ContentCard item={item} />
@@ -180,19 +182,19 @@ export function TmdbCatalogView({ endpoint, title, subtitle }: TmdbCatalogViewPr
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="flex items-center gap-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-zinc-300 transition-colors hover:border-gold-500/50 disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-gold-500/40 hover:text-gold-700 disabled:opacity-40 sm:px-4 dark:border-border-subtle dark:bg-transparent dark:text-zinc-300"
           >
             <ChevronLeft size={16} />
             Anterior
           </button>
-          <span className="text-sm text-zinc-500">
+          <span className="text-sm text-zinc-600 dark:text-zinc-500">
             Página {page} de {totalPages}
           </span>
           <button
             type="button"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="flex items-center gap-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-zinc-300 transition-colors hover:border-gold-500/50 disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-gold-500/40 hover:text-gold-700 disabled:opacity-40 sm:px-4 dark:border-border-subtle dark:bg-transparent dark:text-zinc-300"
           >
             Siguiente
             <ChevronRight size={16} />

@@ -1,8 +1,9 @@
 /**
  * Tipos del catálogo "En Vivo" (IPTV).
  *
- * El catálogo se construye combinando los feeds públicos de iptv-org
- * (https://iptv-org.github.io/api) con los canales y streams quedan
+ * Catálogo vía IPTV Nexus (health-scored, sobre iptv-org):
+ * https://dearbulut.github.io/iptv/api/v1/
+ * Los streams quedan
  * expuestos a través de nuestra propia API interna, nunca directamente
  * al cliente.
  */
@@ -16,6 +17,8 @@ export interface LiveStreamSource {
   userAgent?: string | null;
   /** Calidad reportada (ej. "1080p", "720p"). */
   quality?: string | null;
+  /** Último health check de Nexus. */
+  online?: boolean;
 }
 
 export interface LiveChannel {
@@ -53,8 +56,16 @@ export interface LiveChannelFilters {
   pageSize: number;
 }
 
+export interface LiveChannelListItem {
+  id: string;
+  name: string;
+  logo?: string | null;
+  countryCode: string;
+  categories: string[];
+}
+
 export interface LiveChannelListResult {
-  items: LiveChannel[];
+  items: LiveChannelListItem[];
   total: number;
   page: number;
   totalPages: number;

@@ -99,14 +99,14 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
   return (
     <FadeIn className="mx-auto w-full max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Mi perfil</h1>
-        <p className="mt-1 text-sm text-zinc-500">Administra tu información personal y seguridad.</p>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mi perfil</h1>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-500">Administra tu información personal y seguridad.</p>
       </div>
 
       <section className="rounded-2xl border border-border-subtle bg-surface-raised p-6">
         <div className="mb-5 flex items-center gap-2">
           <User size={18} className="text-gold-500" />
-          <h2 className="text-lg font-semibold text-white">Información personal</h2>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Información personal</h2>
         </div>
 
         <AuthAlertContainer>
@@ -126,7 +126,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-border-subtle bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-gold-500/50"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none focus:border-gold-500/50 dark:border-border-subtle dark:bg-black/30 dark:text-white"
             />
           </div>
           <div>
@@ -137,7 +137,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
               type="email"
               value={email}
               disabled
-              className="w-full cursor-not-allowed rounded-xl border border-border-subtle bg-black/20 px-4 py-3 text-sm text-zinc-500"
+              className="w-full cursor-not-allowed rounded-xl border border-zinc-200 bg-zinc-100 px-4 py-3 text-sm text-zinc-500 dark:border-border-subtle dark:bg-black/20"
             />
           </div>
           <button
@@ -153,7 +153,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
       <section className="rounded-2xl border border-border-subtle bg-surface-raised p-6">
         <div className="mb-5 flex items-center gap-2">
           <Lock size={18} className="text-gold-500" />
-          <h2 className="text-lg font-semibold text-white">Seguridad</h2>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Seguridad</h2>
         </div>
 
         <AuthAlertContainer>
@@ -173,7 +173,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full rounded-xl border border-border-subtle bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-gold-500/50"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none focus:border-gold-500/50 dark:border-border-subtle dark:bg-black/30 dark:text-white"
             />
           </div>
           <div>
@@ -184,7 +184,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-xl border border-border-subtle bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-gold-500/50"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none focus:border-gold-500/50 dark:border-border-subtle dark:bg-black/30 dark:text-white"
             />
           </div>
           <div>
@@ -195,7 +195,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-xl border border-border-subtle bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-gold-500/50"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none focus:border-gold-500/50 dark:border-border-subtle dark:bg-black/30 dark:text-white"
             />
           </div>
           <button

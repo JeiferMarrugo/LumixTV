@@ -99,11 +99,11 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
               aria-label="Cerrar notificaciones"
             />
             <div
-              className="fixed z-[310] w-80 overflow-hidden rounded-xl border border-border-subtle bg-surface-raised shadow-xl"
+              className="fixed z-[310] w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border-subtle bg-surface-raised shadow-xl"
               style={{ top: menuStyle.top, right: menuStyle.right }}
             >
               <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-                <p className="text-sm font-semibold text-white">Notificaciones</p>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white">Notificaciones</p>
                 {unread > 0 && (
                   <button
                     type="button"
@@ -134,12 +134,12 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-medium text-white">{item.title}</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-white">{item.title}</p>
                           <span className="shrink-0 text-[10px] text-zinc-500">
                             {formatRelative(item.createdAt)}
                           </span>
                         </div>
-                        <p className="mt-1 text-xs leading-relaxed text-zinc-400">{item.message}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">{item.message}</p>
                       </div>
                     );
 
@@ -187,10 +187,10 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
           setOpen((v) => !v);
           if (!open) void loadNotifications();
         }}
-        className={`relative text-zinc-400 transition-colors hover:text-white ${
+        className={`relative text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white ${
           compact
-            ? "flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/[0.06]"
-            : "rounded-full p-2 hover:bg-surface-overlay"
+            ? "flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-white/[0.06]"
+            : "rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-surface-overlay"
         }`}
         aria-label="Notificaciones"
       >

@@ -1,36 +1,14 @@
-export async function triggerContentDownload(
-  contentId: string,
-  params: { season?: number; episode?: number; type?: string },
-): Promise<{ filename: string }> {
-  const query = new URLSearchParams({
-    season: String(params.season ?? 1),
-    episode: String(params.episode ?? 1),
-  });
-  if (params.type) query.set("type", params.type);
+export interface DownloadJobResult {
+  id: string;
+  filename: string;
+  fileUrl: string;
+}
 
-  const res = await fetch(
-    `/api/content/${encodeURIComponent(contentId)}/download?${query}`,
-  );
-
-  const data = (await res.json()) as {
-    available?: boolean;
-    fileUrl?: string;
-    filename?: string;
-    error?: string;
-  };
-
-  if (!res.ok || !data.available || !data.fileUrl) {
-    throw new Error(data.error ?? "No se pudo preparar la descarga");
-  }
-
-  const filename = data.filename ?? "descarga.mp4";
-  const fileUrl = data.fileUrl;
-
+function triggerBrowserDownload(fileUrl: string, filename: string) {
   const iframe = document.createElement("iframe");
   iframe.style.display = "none";
   iframe.src = fileUrl;
   document.body.appendChild(iframe);
-
   window.setTimeout(() => iframe.remove(), 120_000);
 
   const link = document.createElement("a");
@@ -40,6 +18,44 @@ export async function triggerContentDownload(
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
 
-  return { filename };
+export async function triggerContentDownload(
+  contentId: string,
+  params: { season?: number; episode?: number; type?: string },
+): Promise<DownloadJobResult> {
+  const res = await fetch("/api/downloads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contentId,
+      season: params.season,
+      episode: params.episode,
+      type: params.type,
+    }),
+  });
+
+  const data = (await res.json()) as {
+    available?: boolean;
+    fileUrl?: string;
+    filename?: string;
+    item?: { id: string };
+    error?: string;
+  };
+
+  if (!res.ok || !data.available || !data.fileUrl || !data.filename || !data.item?.id) {
+    throw new Error(data.error ?? "No se pudo preparar la descarga");
+  }
+
+  triggerBrowserDownload(data.fileUrl, data.filename);
+
+  return {
+    id: data.item.id,
+    filename: data.filename,
+    fileUrl: data.fileUrl,
+  };
+}
+
+export function retryDownloadFromRecord(fileUrl: string, filename: string) {
+  triggerBrowserDownload(fileUrl, filename);
 }

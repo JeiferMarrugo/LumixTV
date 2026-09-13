@@ -57,7 +57,7 @@ export function StreamingLoader({
     >
       <div className={`relative ${s.stage}`}>
         <motion.div
-          className="absolute inset-2 rounded-full bg-gold-500/15 blur-2xl"
+          className="absolute inset-2 rounded-full bg-gold-500/20 blur-2xl dark:bg-gold-500/15"
           animate={{ scale: [0.95, 1.08, 0.95], opacity: [0.4, 0.75, 0.4] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -73,7 +73,7 @@ export function StreamingLoader({
         {floaters.map(({ Icon, x, y, delay, rotate }, i) => (
           <motion.div
             key={i}
-            className="absolute left-1/2 top-1/2 text-gold-400"
+            className="absolute left-1/2 top-1/2 text-gold-600 dark:text-gold-400"
             style={{ marginLeft: x, marginTop: y }}
             animate={{
               y: [y, y - 10, y],
@@ -103,7 +103,7 @@ export function StreamingLoader({
         >
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gold-500/25 via-gold-500/5 to-transparent blur-sm" />
 
-          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-gold-500/35 bg-gradient-to-br from-zinc-900 via-black to-black shadow-[0_0_40px_rgba(212,160,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-gold-500/40 bg-gradient-to-br from-white via-zinc-50 to-zinc-100 shadow-[0_0_40px_rgba(212,160,23,0.15),0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-gold-500/35 dark:from-zinc-900 dark:via-black dark:to-black dark:shadow-[0_0_40px_rgba(212,160,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
             <motion.div
               className="absolute inset-[18%] rounded-full border border-gold-500/15"
               animate={{ rotate: 360, opacity: [0.35, 0.7, 0.35] }}
@@ -135,7 +135,7 @@ export function StreamingLoader({
         </motion.div>
 
         <motion.div
-          className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-center justify-center rounded-xl border border-gold-500/30 bg-black/80 text-gold-400 shadow-lg backdrop-blur-sm"
+          className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-center justify-center rounded-xl border border-gold-500/30 bg-card text-gold-600 shadow-lg backdrop-blur-sm dark:bg-black/80 dark:text-gold-400"
           style={{ width: s.badge, height: s.badge }}
           animate={{ rotate: [-10, 10, -10], y: [0, -2, 0] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
@@ -144,7 +144,7 @@ export function StreamingLoader({
         </motion.div>
 
         <motion.div
-          className="absolute -right-1 top-2 rounded-full border border-gold-500/25 bg-black/70 p-1.5 text-gold-500 backdrop-blur-sm"
+          className="absolute -right-1 top-2 rounded-full border border-gold-500/25 bg-card p-1.5 text-gold-600 shadow-md backdrop-blur-sm dark:bg-black/70 dark:text-gold-500"
           animate={{ scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
         >
@@ -158,7 +158,7 @@ export function StreamingLoader({
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <p className="text-sm font-semibold tracking-wide text-zinc-200">{label}</p>
+          <p className="text-sm font-semibold tracking-wide text-foreground">{label}</p>
           <div className="flex gap-1">
             {[0, 1, 2].map((i) => (
               <motion.span

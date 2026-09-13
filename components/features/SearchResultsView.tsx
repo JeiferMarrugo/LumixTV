@@ -24,8 +24,8 @@ function ResultsGrid({
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-baseline gap-2">
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        {totalLabel && <span className="text-sm text-zinc-500">{totalLabel}</span>}
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h2>
+        {totalLabel && <span className="text-sm text-zinc-600 dark:text-zinc-500">{totalLabel}</span>}
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {items.map((item) => (

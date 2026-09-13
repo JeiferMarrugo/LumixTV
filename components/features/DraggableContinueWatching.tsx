@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { getContentById } from "@/lib/data";
 import { contentHref } from "@/lib/content-id";
-import { fetchServerContinueWatching } from "@/lib/watch-history-client";
 import { useAppStore, type ContinueWatchingItem } from "@/lib/store/use-app-store";
 import { formatRelativeDate } from "@/lib/temporal/dates";
 import { FadeIn } from "@/components/ui/motion";
@@ -44,7 +43,7 @@ function ScrollArrow({
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === "left" ? "Anterior" : "Siguiente"}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/80 text-zinc-400 backdrop-blur-sm transition-all hover:border-gold-500/40 hover:text-gold-500 disabled:pointer-events-none disabled:opacity-30"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm backdrop-blur-sm transition-all hover:border-gold-500/40 hover:text-gold-700 disabled:pointer-events-none disabled:opacity-30 dark:border-white/10 dark:bg-black/80 dark:text-zinc-400 dark:hover:text-gold-500"
     >
       <Icon size={16} />
     </button>
@@ -105,7 +104,7 @@ function DraggableItem({
         isDragging
           ? "scale-[0.97] opacity-50"
           : "hover:-translate-y-1 hover:border-gold-500/30 hover:shadow-[0_16px_40px_rgba(212,160,23,0.12)]"
-      } ${isOver ? "border-gold-500/50 ring-2 ring-gold-500/20" : "border-white/[0.08]"}`}
+      } ${isOver ? "border-gold-500/50 ring-2 ring-gold-500/20" : "border-zinc-200 dark:border-white/[0.08]"}`}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-surface-overlay">
         <Image
@@ -169,14 +168,14 @@ function DraggableItem({
           <button
             type="button"
             onClick={() => onContinue(item)}
-            className="rounded-lg border border-gold-500/25 px-3 py-1.5 text-xs font-semibold text-gold-400 transition-colors hover:border-gold-500/50 hover:bg-gold-500/10"
+            className="rounded-lg border border-gold-500/30 px-3 py-1.5 text-xs font-semibold text-gold-700 transition-colors hover:border-gold-500/50 hover:bg-gold-500/10 dark:text-gold-400"
           >
             Continuar
           </button>
           <button
             type="button"
             onClick={() => onRemove(item)}
-            className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:border-red-500/30 hover:text-red-300"
+            className="rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-red-500/30 hover:text-red-600 dark:border-white/10 dark:text-zinc-500 dark:hover:text-red-300"
             aria-label={`Quitar ${item.title}`}
           >
             Quitar
@@ -190,16 +189,10 @@ function DraggableItem({
 export function DraggableContinueWatching() {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { continueWatching, reorderContinueWatching, startWatching, hydrateContinueWatching, removeFromContinueWatching } =
+  const { continueWatching, reorderContinueWatching, startWatching, removeFromContinueWatching } =
     useAppStore();
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
-  useEffect(() => {
-    void fetchServerContinueWatching().then((items) => {
-      if (items.length > 0) hydrateContinueWatching(items);
-    });
-  }, [hydrateContinueWatching]);
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -252,12 +245,12 @@ export function DraggableContinueWatching() {
         <div>
           <div className="mb-1 flex items-center gap-2">
             <Clock size={18} className="text-gold-500" />
-            <h2 className="text-lg font-bold text-white">Continuar viendo</h2>
-            <span className="rounded-full bg-gold-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold-400">
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Continuar viendo</h2>
+            <span className="rounded-full bg-gold-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold-700 dark:text-gold-400">
               {continueWatching.length}
             </span>
           </div>
-          <p className="text-xs text-zinc-600">Arrastra las tarjetas para reordenar</p>
+          <p className="text-xs text-zinc-600 dark:text-zinc-500">Arrastra las tarjetas para reordenar</p>
         </div>
 
         {continueWatching.length > 1 && (
@@ -278,15 +271,15 @@ export function DraggableContinueWatching() {
 
       <div className="relative">
         {canScrollLeft && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-background to-transparent" />
         )}
         {canScrollRight && (
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent" />
         )}
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 pl-0.5 pr-1 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden [&>*]:snap-start"
         >
           {continueWatching.map((item, index) => (
             <DraggableItem

@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronLeft, ChevronRight, Info, Play, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Play, Sparkles, Star } from "lucide-react";
 import type { TmdbFeatured } from "@/lib/tmdb/types";
 import { contentHref } from "@/lib/content-id";
+import { isPlaceholderHeroDescription, isValidHeroYear } from "@/lib/hero-utils";
 import { cn } from "@/lib/utils";
 
 type FeaturedItem = TmdbFeatured & { id?: string };
@@ -17,6 +18,29 @@ const ROTATION_MS = 7000;
 interface HomeHeroProps {
   featuredList: FeaturedItem[];
   source: "catalog" | "tmdb";
+}
+
+function HeroBadge({
+  children,
+  variant = "default",
+}: {
+  children: ReactNode;
+  variant?: "default" | "gold" | "muted";
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
+        variant === "gold" &&
+          "border border-gold-500/35 bg-gold-500/12 text-gold-300 shadow-[0_0_20px_rgba(212,160,23,0.12)]",
+        variant === "default" &&
+          "border border-white/12 bg-white/[0.06] text-zinc-200 backdrop-blur-sm",
+        variant === "muted" && "border border-white/8 bg-black/30 text-zinc-400",
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
 export function HomeHero({ featuredList, source }: HomeHeroProps) {
@@ -76,6 +100,7 @@ export function HomeHero({ featuredList, source }: HomeHeroProps) {
 
   const ratingValue = Number.parseFloat(featured.rating);
   const showRating = Number.isFinite(ratingValue) && ratingValue > 0;
+  const hasRealDescription = !isPlaceholderHeroDescription(featured.description);
 
   return (
     <section
@@ -109,63 +134,75 @@ export function HomeHero({ featuredList, source }: HomeHeroProps) {
       </AnimatePresence>
 
       <div className="pointer-events-none absolute inset-0 bg-black/10" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/92 via-black/40 to-black/5" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/95 via-black/55 to-black/10" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black to-transparent" />
 
       <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-24 pt-28 sm:px-10 lg:px-16 lg:pb-28">
         <AnimatePresence mode="wait">
           <motion.div
             key={`${featured.id}-content`}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-3xl"
           >
-            <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-400">
-              <span className="font-semibold uppercase tracking-[0.18em] text-gold-400">
-                {featured.genre}
-              </span>
-              <span className="text-zinc-600">·</span>
-              <span>{featured.year}</span>
-              {showRating && (
-                <>
-                  <span className="text-zinc-600">·</span>
-                  <span className="inline-flex items-center gap-1 text-zinc-300">
-                    <Star size={13} className="fill-gold-400 text-gold-400" />
-                    {ratingValue.toFixed(1)}
-                  </span>
-                </>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <HeroBadge variant="gold">{featured.genre}</HeroBadge>
+              {isValidHeroYear(featured.year) && (
+                <HeroBadge variant="muted">{featured.year}</HeroBadge>
               )}
-              {!showRating && featured.rating && (
-                <>
-                  <span className="text-zinc-600">·</span>
-                  <span>{featured.rating}</span>
-                </>
+              {featured.quality && <HeroBadge variant="default">{featured.quality}</HeroBadge>}
+              {showRating && (
+                <HeroBadge variant="default">
+                  <Star size={11} className="mr-1 fill-gold-400 text-gold-400" />
+                  {ratingValue.toFixed(1)}
+                </HeroBadge>
               )}
               {source === "catalog" && (
-                <>
-                  <span className="text-zinc-600">·</span>
-                  <span className="text-zinc-500">Destacado</span>
-                </>
+                <HeroBadge variant="default">
+                  <Sparkles size={11} className="mr-1 text-gold-400" />
+                  Destacado
+                </HeroBadge>
               )}
-            </p>
+            </div>
 
-            <h1 className="max-w-2xl text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
+            <h1 className="max-w-2xl text-4xl font-bold leading-[1.06] tracking-tight text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.65)] sm:text-5xl lg:text-[3.5rem]">
               {featured.title}
             </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-[1.05rem]">
-              {featured.description}
-            </p>
+            {featured.tagline && (
+              <p className="mt-3 max-w-xl text-base italic leading-snug text-gold-300/90 sm:text-lg">
+                “{featured.tagline}”
+              </p>
+            )}
+
+            <div className="mt-6 max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_16px_48px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-gold-500/70 to-transparent" />
+              <div className="px-5 py-4 sm:px-6 sm:py-5">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                  Sinopsis
+                </p>
+                <p
+                  className={cn(
+                    "text-[15px] leading-[1.7] sm:text-base",
+                    hasRealDescription ? "text-zinc-200" : "text-zinc-400",
+                  )}
+                >
+                  {hasRealDescription
+                    ? featured.description
+                    : "Explora este título en LumixTV y disfrútalo en streaming."}
+                </p>
+              </div>
+            </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               {featured.id && (
                 <button
                   type="button"
                   onClick={() => handleGoToDetail(featured)}
-                  className="group inline-flex min-w-[148px] items-center justify-center gap-2.5 rounded-lg bg-gold-500 px-6 py-3 text-sm font-bold text-black transition-colors hover:bg-gold-400"
+                  className="group inline-flex min-w-[148px] items-center justify-center gap-2.5 rounded-xl bg-gold-500 px-6 py-3.5 text-sm font-bold text-black shadow-[0_8px_32px_rgba(212,160,23,0.35)] transition-all hover:bg-gold-400 hover:shadow-[0_12px_36px_rgba(212,160,23,0.45)]"
                 >
                   <Play size={18} fill="currentColor" />
                   Ver ahora
@@ -174,7 +211,7 @@ export function HomeHero({ featuredList, source }: HomeHeroProps) {
               {featured.id && (
                 <Link
                   href={contentHref(featured.id)}
-                  className="inline-flex items-center gap-2.5 rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+                  className="inline-flex items-center gap-2.5 rounded-xl border border-white/20 bg-white/[0.06] px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:border-white/30 hover:bg-white/10"
                 >
                   <Info size={18} />
                   Más info

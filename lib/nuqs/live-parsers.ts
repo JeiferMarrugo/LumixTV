@@ -1,7 +1,8 @@
 import { parseAsBoolean, parseAsInteger, parseAsString } from "nuqs";
 
 export const liveSearchParams = {
-  q: parseAsString.withDefault(""),
+  /** Búsqueda de canales (separada del `q` global del header). */
+  canal: parseAsString.withDefault(""),
   country: parseAsString.withDefault(""),
   category: parseAsString.withDefault(""),
   hd: parseAsBoolean.withDefault(false),

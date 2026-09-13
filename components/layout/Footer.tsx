@@ -10,7 +10,7 @@ const footerLinks = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-border-subtle bg-surface px-6 py-10 pb-28 lg:pb-10">
+    <footer className="mt-auto border-t border-border-subtle bg-surface px-4 py-10 pb-28 sm:px-6 lg:pb-10">
       <div className="flex flex-col items-center gap-6">
         <Logo size="sm" align="center" />
 
@@ -19,14 +19,14 @@ export function Footer() {
             <button
               key={link}
               type="button"
-              className="text-xs text-zinc-500 transition-colors hover:text-gold-500"
+              className="text-xs text-zinc-600 transition-colors hover:text-gold-600 dark:text-zinc-500 dark:hover:text-gold-500"
             >
               {link}
             </button>
           ))}
         </nav>
 
-        <p className="text-xs text-zinc-600">
+        <p className="text-xs text-zinc-500 dark:text-zinc-600">
           © {new Date().getFullYear()} LumixTV. Todos los derechos reservados.
         </p>
       </div>

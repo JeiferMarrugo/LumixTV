@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 function AnimeFallback() {
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-6 sm:px-8 sm:py-8">
       <StreamingLoader />
     </div>
   );

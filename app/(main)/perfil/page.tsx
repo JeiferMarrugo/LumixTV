@@ -7,7 +7,7 @@ export default async function ProfilePage() {
   if (!session) redirect("/login");
 
   return (
-    <div className="p-8">
+    <div className="px-4 py-6 sm:p-8">
       <ProfileForm initialName={session.user.name} email={session.user.email} />
     </div>
   );

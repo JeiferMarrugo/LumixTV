@@ -246,11 +246,11 @@ export async function fetchContentDetail(id: string): Promise<ContentDetail | nu
   }
 
   if (parsed.kind === "movie") {
-    const data = await tmdbFetch<TmdbMovieDetail>(`/movie/${parsed.tmdbId}`);
+    const data = await fetchLocalizedOverview<TmdbMovieDetail>(`/movie/${parsed.tmdbId}`);
     return mapMovieDetail(data);
   }
 
-  const data = await tmdbFetch<TmdbTvDetail>(`/tv/${parsed.tmdbId}`);
+  const data = await fetchLocalizedOverview<TmdbTvDetail>(`/tv/${parsed.tmdbId}`);
   return mapTvDetail(data);
 }
 
@@ -308,9 +308,27 @@ export async function fetchTvBrief(tmdbId: number) {
   };
 }
 
+async function fetchLocalizedOverview<T extends { overview?: string; tagline?: string }>(
+  path: string,
+) {
+  const primary = await tmdbFetch<T>(path);
+  if (primary.overview?.trim()) return primary;
+
+  try {
+    const english = await tmdbFetch<T>(path, { language: "en-US" });
+    return {
+      ...primary,
+      overview: english.overview?.trim() || primary.overview,
+      tagline: primary.tagline?.trim() || english.tagline,
+    };
+  } catch {
+    return primary;
+  }
+}
+
 export async function fetchHeroBrief(tmdbId: number, kind: "movie" | "tv") {
   if (kind === "movie") {
-    const data = await tmdbFetch<TmdbMovieDetail>(`/movie/${tmdbId}`);
+    const data = await fetchLocalizedOverview<TmdbMovieDetail>(`/movie/${tmdbId}`);
 
     return {
       title: data.title,
@@ -322,10 +340,11 @@ export async function fetchHeroBrief(tmdbId: number, kind: "movie" | "tv") {
         backdropUrl(data.backdrop_path, "w1280") ??
         posterUrl(data.poster_path, "w780"),
       overview: data.overview,
+      tagline: data.tagline,
     };
   }
 
-  const data = await tmdbFetch<TmdbTvDetail>(`/tv/${tmdbId}`);
+  const data = await fetchLocalizedOverview<TmdbTvDetail>(`/tv/${tmdbId}`);
 
   return {
     title: data.name,
@@ -337,6 +356,7 @@ export async function fetchHeroBrief(tmdbId: number, kind: "movie" | "tv") {
       backdropUrl(data.backdrop_path, "w1280") ??
       posterUrl(data.poster_path, "w780"),
     overview: data.overview,
+    tagline: data.tagline,
   };
 }
 

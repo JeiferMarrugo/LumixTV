@@ -21,6 +21,7 @@ model User {
   accounts      Account[]
   notifications Notification[]
   watchHistory  WatchHistory[]
+  downloads     ContentDownload[]
 
   role       String?
   banned     Boolean?  @default(false)
@@ -118,6 +119,27 @@ model WatchHistory {
   @@index([userId, watchedAt])
   @@index([contentId])
   @@map("watch_history")
+}
+
+model ContentDownload {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId   String
+  contentType String
+  title       String
+  image       String?
+  filename    String?
+  season      Int?
+  episode     Int?
+  status      String   @default("preparing")
+  fileUrl     String?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("content_download")
 }
 
 model ContentPlayStat {

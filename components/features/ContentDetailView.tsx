@@ -13,6 +13,7 @@ import { CastToTvDialog } from "@/components/features/CastToTvDialog";
 import { StreamPlayer } from "@/components/features/StreamPlayer";
 import { DetailSelect } from "@/components/ui/DetailSelect";
 import { triggerContentDownload } from "@/lib/download-client";
+import { cn } from "@/lib/utils";
 
 interface EpisodeOption {
   number: number;
@@ -335,6 +336,170 @@ export function ContentDetailView({ id, autoPlay = false }: ContentDetailViewPro
         ? "Continuar"
         : "Reproducir";
 
+  const metaHeader = (
+    <>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <span className="rounded-full bg-gold-500/15 px-3 py-1 text-xs font-semibold text-gold-400">
+          {typeLabel}
+        </span>
+        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white">
+          {detail.year}
+        </span>
+        <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs text-gold-400">
+          <Star size={12} className="fill-gold-400" />
+          {detail.rating.toFixed(1)}
+        </span>
+      </div>
+
+      <h1 className="font-display text-3xl font-bold tracking-wide text-white sm:text-5xl">
+        {detail.title}
+      </h1>
+
+      {detail.tagline && (
+        <p className="mt-2 text-sm italic text-zinc-400">{detail.tagline}</p>
+      )}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {detail.genres.map((genre) => (
+          <span
+            key={genre}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300"
+          >
+            {genre}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-zinc-400">
+        {detail.runtime ? (
+          <span className="flex items-center gap-1.5">
+            <Clock size={14} />
+            {detail.runtime} min
+          </span>
+        ) : null}
+        {detail.seasons ? (
+          <span className="flex items-center gap-1.5">
+            <Tv size={14} />
+            {detail.seasons} temporada{detail.seasons > 1 ? "s" : ""}
+            {detail.episodes ? ` · ${detail.episodes} eps.` : ""}
+          </span>
+        ) : null}
+      </div>
+    </>
+  );
+
+  const seriesControls =
+    isSeries && playbackConfigured && detail.seasons ? (
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br from-zinc-900/90 via-zinc-950/95 to-black p-4 shadow-[0_12px_40px_rgba(0,0,0,0.4)] backdrop-blur-md">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-500/25 to-transparent" />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+          <DetailSelect
+            label="Temporada"
+            value={String(season)}
+            onChange={(value) => setSeason(Number(value))}
+            options={Array.from({ length: detail.seasons }, (_, index) => {
+              const number = index + 1;
+              return {
+                value: String(number),
+                label: `Temporada ${number}`,
+                badge: `T${number}`,
+              };
+            })}
+          />
+
+          <DetailSelect
+            label="Episodio"
+            value={String(episode)}
+            onChange={(value) => setEpisode(Number(value))}
+            disabled={episodes.length === 0}
+            loading={loadingEpisodes}
+            menuMinWidth={300}
+            className="min-w-[min(100%,18rem)] flex-[1.6]"
+            options={episodes.map((ep) => ({
+              value: String(ep.number),
+              label: ep.name,
+              badge: `E${ep.number}`,
+            }))}
+          />
+
+          <button
+            type="button"
+            onClick={handlePlay}
+            className="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-500 to-amber-400 px-6 text-sm font-bold text-black shadow-[0_8px_24px_rgba(212,160,23,0.28)] transition-all hover:from-gold-400 hover:to-gold-300 lg:w-auto lg:min-w-[10.5rem]"
+          >
+            <Play size={18} fill="currentColor" />
+            {playLabel}
+          </button>
+        </div>
+      </div>
+    ) : null;
+
+  const primaryPlayButton = (
+    <button
+      type="button"
+      onClick={handlePlay}
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-500 to-amber-400 px-6 py-3 text-sm font-bold text-black shadow-[0_8px_24px_rgba(212,160,23,0.28)] transition-all hover:from-gold-400 hover:to-gold-300 sm:w-auto"
+    >
+      <Play size={18} fill="currentColor" />
+      {playLabel}
+    </button>
+  );
+
+  const secondaryActions = (
+    <>
+      {playbackConfigured && downloadAvailable && (
+        <button
+          type="button"
+          onClick={() => void handleDownload()}
+          disabled={downloading}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gold-500/30 bg-gold-500/10 px-4 py-2.5 text-sm font-semibold text-gold-400 transition-colors hover:border-gold-500/50 hover:bg-gold-500/15 disabled:opacity-60 sm:flex-none sm:px-5 sm:py-3"
+        >
+          <Download size={16} />
+          {downloading ? "Preparando..." : "Descargar"}
+        </button>
+      )}
+
+      {playbackConfigured && (
+        <button
+          type="button"
+          onClick={() => setShowCast(true)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-gold-500/40 hover:text-white sm:flex-none sm:px-5 sm:py-3"
+        >
+          <Cast size={16} />
+          Enviar al TV
+        </button>
+      )}
+
+      {trailerKey && playbackConfigured && (
+        <button
+          type="button"
+          onClick={handleTrailer}
+          className="flex flex-1 items-center justify-center rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-gold-500/40 hover:text-white sm:flex-none sm:px-5 sm:py-3"
+        >
+          Ver tráiler
+        </button>
+      )}
+
+      {savedProgress && (
+        <span className="w-full text-center text-xs text-zinc-500 sm:w-auto sm:text-left">
+          Progreso: {savedProgress.progress}%
+        </span>
+      )}
+    </>
+  );
+
+  const actionBlock = (className?: string) => (
+    <div className={cn("space-y-3", className)}>
+      {seriesControls ?? primaryPlayButton}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">{secondaryActions}</div>
+      {!playbackConfigured && !trailerKey && (
+        <p className="text-xs leading-relaxed text-zinc-500">
+          La reproducción completa aún no está disponible para este título.
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div>
       <section className="relative min-h-[480px] overflow-hidden sm:min-h-[520px]">
@@ -350,181 +515,42 @@ export function ContentDetailView({ id, autoPlay = false }: ContentDetailViewPro
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,160,23,0.06),transparent_55%)]" />
 
-        <FadeIn className="relative mx-auto flex max-w-6xl gap-8 px-8 py-10">
+        <FadeIn className="relative mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
           <Link
             href="/"
-            className="absolute left-8 top-8 flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-gold-400"
+            className="absolute left-4 top-6 flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-gold-400 sm:left-8 sm:top-8"
           >
             <ArrowLeft size={16} />
             Volver
           </Link>
 
-          <div className="relative mt-10 h-64 w-44 shrink-0 overflow-hidden rounded-2xl border border-gold-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.55),0_0_0_1px_rgba(212,160,23,0.12)] ring-1 ring-white/10 sm:h-72 sm:w-48">
-            <Image
-              src={detail.poster}
-              alt={detail.title}
-              fill
-              className="object-cover brightness-[1.04] saturate-[1.06]"
-              sizes="192px"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-          </div>
-
-          <div className="mt-10 min-w-0 flex-1">
-            <div className="mb-3 flex flex-wrap gap-2">
-              <span className="rounded-full bg-gold-500/15 px-3 py-1 text-xs font-semibold text-gold-400">
-                {typeLabel}
-              </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white">
-                {detail.year}
-              </span>
-              <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs text-gold-400">
-                <Star size={12} className="fill-gold-400" />
-                {detail.rating.toFixed(1)}
-              </span>
-            </div>
-
-            <h1 className="font-display text-4xl font-bold tracking-wide text-white sm:text-5xl">
-              {detail.title}
-            </h1>
-
-            {detail.tagline && (
-              <p className="mt-2 text-sm italic text-zinc-400">{detail.tagline}</p>
-            )}
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {detail.genres.map((genre) => (
-                <span
-                  key={genre}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-4 text-sm text-zinc-400">
-              {detail.runtime ? (
-                <span className="flex items-center gap-1.5">
-                  <Clock size={14} />
-                  {detail.runtime} min
-                </span>
-              ) : null}
-              {detail.seasons ? (
-                <span className="flex items-center gap-1.5">
-                  <Tv size={14} />
-                  {detail.seasons} temporada{detail.seasons > 1 ? "s" : ""}
-                  {detail.episodes ? ` · ${detail.episodes} eps.` : ""}
-                </span>
-              ) : null}
-            </div>
-
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-zinc-300">
-              {detail.overview}
-            </p>
-
-            {isSeries && playbackConfigured && detail.seasons ? (
-              <div className="relative mt-6 overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br from-zinc-900/90 via-zinc-950/95 to-black p-4 shadow-[0_12px_40px_rgba(0,0,0,0.4)] backdrop-blur-md sm:p-5">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-500/25 to-transparent" />
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-                  <DetailSelect
-                    label="Temporada"
-                    value={String(season)}
-                    onChange={(value) => setSeason(Number(value))}
-                    options={Array.from({ length: detail.seasons }, (_, index) => {
-                      const number = index + 1;
-                      return {
-                        value: String(number),
-                        label: `Temporada ${number}`,
-                        badge: `T${number}`,
-                      };
-                    })}
-                  />
-
-                  <DetailSelect
-                    label="Episodio"
-                    value={String(episode)}
-                    onChange={(value) => setEpisode(Number(value))}
-                    disabled={episodes.length === 0}
-                    loading={loadingEpisodes}
-                    menuMinWidth={300}
-                    className="min-w-[min(100%,18rem)] flex-[1.6]"
-                    options={episodes.map((ep) => ({
-                      value: String(ep.number),
-                      label: ep.name,
-                      badge: `E${ep.number}`,
-                    }))}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={handlePlay}
-                    className="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-500 to-amber-400 px-6 text-sm font-bold text-black shadow-[0_8px_24px_rgba(212,160,23,0.28)] transition-all hover:from-gold-400 hover:to-gold-300 lg:w-auto lg:min-w-[10.5rem]"
-                  >
-                    <Play size={18} fill="currentColor" />
-                    {playLabel}
-                  </button>
-                </div>
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-8">
+            <div className="flex gap-4 sm:shrink-0 sm:flex-col">
+              <div className="relative h-56 w-36 shrink-0 overflow-hidden rounded-2xl border border-gold-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.55),0_0_0_1px_rgba(212,160,23,0.12)] ring-1 ring-white/10 sm:h-72 sm:w-48">
+                <Image
+                  src={detail.poster}
+                  alt={detail.title}
+                  fill
+                  className="object-cover brightness-[1.04] saturate-[1.06]"
+                  sizes="192px"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
               </div>
-            ) : (
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handlePlay}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-500 to-amber-400 px-6 py-3 text-sm font-bold text-black shadow-[0_8px_24px_rgba(212,160,23,0.28)] transition-all hover:from-gold-400 hover:to-gold-300"
-                >
-                  <Play size={18} fill="currentColor" />
-                  {playLabel}
-                </button>
-              </div>
-            )}
 
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              {playbackConfigured && downloadAvailable && (
-                <button
-                  type="button"
-                  onClick={() => void handleDownload()}
-                  disabled={downloading}
-                  className="flex items-center gap-2 rounded-lg border border-gold-500/30 bg-gold-500/10 px-5 py-3 text-sm font-semibold text-gold-400 transition-colors hover:border-gold-500/50 hover:bg-gold-500/15 disabled:opacity-60"
-                >
-                  <Download size={16} />
-                  {downloading ? "Preparando..." : "Descargar"}
-                </button>
-              )}
-
-              {playbackConfigured && (
-                <button
-                  type="button"
-                  onClick={() => setShowCast(true)}
-                  className="flex items-center gap-2 rounded-lg border border-white/15 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:border-gold-500/40 hover:text-white"
-                >
-                  <Cast size={16} />
-                  Enviar al TV
-                </button>
-              )}
-
-              {trailerKey && playbackConfigured && (
-                <button
-                  type="button"
-                  onClick={handleTrailer}
-                  className="rounded-lg border border-white/15 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:border-gold-500/40 hover:text-white"
-                >
-                  Ver tráiler
-                </button>
-              )}
-
-              {savedProgress && (
-                <span className="flex items-center text-xs text-zinc-500">
-                  Progreso: {savedProgress.progress}%
-                </span>
-              )}
+              <div className="min-w-0 flex-1 self-start sm:hidden">{metaHeader}</div>
             </div>
 
-            {!playbackConfigured && !trailerKey && (
-              <p className="mt-4 max-w-2xl text-xs leading-relaxed text-zinc-500">
-                La reproducción completa aún no está disponible para este título.
+            {actionBlock("sm:hidden")}
+
+            <div className="min-w-0 flex-1">
+              <div className="hidden sm:block">{metaHeader}</div>
+
+              <p className="mt-0 max-w-2xl text-sm leading-relaxed text-zinc-300 sm:mt-5">
+                {detail.overview}
               </p>
-            )}
+
+              {actionBlock("mt-6 hidden sm:block")}
+            </div>
           </div>
         </FadeIn>
       </section>

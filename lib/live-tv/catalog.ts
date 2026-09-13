@@ -11,10 +11,13 @@ const API_BASE = "https://iptv-org.github.io/api";
 /** Revalida el catálogo cada 6 horas. */
 const CATALOG_REVALIDATE_SECONDS = 60 * 60 * 6;
 
+const FETCH_TIMEOUT_MS = 20_000;
+
 async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}/${path}`, {
     next: { revalidate: CATALOG_REVALIDATE_SECONDS },
     headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
 
   if (!res.ok) {

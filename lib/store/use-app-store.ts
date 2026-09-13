@@ -12,8 +12,11 @@ export interface ContinueWatchingItem {
 }
 
 interface AppState {
+  /** Usuario al que pertenecen los datos persistidos en este dispositivo. */
+  activeUserId: string | null;
   watchlist: string[];
   continueWatching: ContinueWatchingItem[];
+  resetForUser: (userId: string | null) => void;
   addToWatchlist: (id: string) => void;
   removeFromWatchlist: (id: string) => void;
   toggleWatchlist: (id: string) => void;
@@ -44,8 +47,19 @@ const MOCK_CONTINUE_IDS = new Set(["5", "6", "7"]);
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      activeUserId: null,
       watchlist: [],
       continueWatching: [],
+
+      resetForUser: (userId) =>
+        set((state) => {
+          if (state.activeUserId === userId) return state;
+          return {
+            activeUserId: userId,
+            watchlist: [],
+            continueWatching: [],
+          };
+        }),
 
       addToWatchlist: (id) =>
         set((state) => ({
@@ -70,25 +84,10 @@ export const useAppStore = create<AppState>()(
       reorderContinueWatching: (items) => set({ continueWatching: items }),
 
       hydrateContinueWatching: (items) =>
-        set((state) => {
-          const localById = new Map(state.continueWatching.map((item) => [item.id, item]));
-          const merged = items.map((serverItem) => {
-            const local = localById.get(serverItem.id);
-            if (!local) return serverItem;
-            return new Date(local.watchedAt) > new Date(serverItem.watchedAt) ? local : serverItem;
-          });
-
-          for (const localItem of state.continueWatching) {
-            if (!merged.some((item) => item.id === localItem.id)) {
-              merged.push(localItem);
-            }
-          }
-
-          return {
-            continueWatching: merged
-              .sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime())
-              .slice(0, 20),
-          };
+        set({
+          continueWatching: [...items]
+            .sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime())
+            .slice(0, 20),
         }),
 
       startWatching: (item) => {
@@ -168,18 +167,31 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "lumixtv-store",
-      version: 1,
+      version: 2,
+      partialize: (state) => ({
+        activeUserId: state.activeUserId,
+        watchlist: state.watchlist,
+        continueWatching: state.continueWatching,
+      }),
       migrate: (persisted, version) => {
-        const state = persisted as AppState;
-        if (version < 1) {
+        const state = persisted as Partial<AppState>;
+        const continueWatching = (state.continueWatching ?? []).filter(
+          (item) => !MOCK_CONTINUE_IDS.has(item.id),
+        );
+
+        if (version < 2) {
           return {
-            ...state,
-            continueWatching: (state.continueWatching ?? []).filter(
-              (item) => !MOCK_CONTINUE_IDS.has(item.id),
-            ),
+            activeUserId: null,
+            watchlist: state.watchlist ?? [],
+            continueWatching: [],
           };
         }
-        return state;
+
+        return {
+          activeUserId: state.activeUserId ?? null,
+          watchlist: state.watchlist ?? [],
+          continueWatching,
+        };
       },
     },
   ),

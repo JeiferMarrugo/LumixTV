@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Cast, Download, Loader2, Maximize, Minimize, Settings2, X } from "lucide-react";
 import { CastToTvDialog } from "@/components/features/CastToTvDialog";
+import { PlayerGestureFeedback } from "@/components/features/PlayerGestureFeedback";
+import { useImmersivePlayer } from "@/lib/hooks/use-immersive-player";
 import { cn } from "@/lib/utils";
 import { triggerContentDownload } from "@/lib/download-client";
 
@@ -37,7 +39,6 @@ export function StreamPlayer({
   episode = 1,
   onClose,
 }: StreamPlayerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<number | null>(null);
 
   const [embedUrl, setEmbedUrl] = useState<string | null>(initialEmbedUrl);
@@ -45,7 +46,6 @@ export function StreamPlayer({
   const [downloadAvailable, setDownloadAvailable] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCast, setShowCast] = useState(false);
 
@@ -64,6 +64,19 @@ export function StreamPlayer({
       if (!showSettings) setShowControls(false);
     }, 3500);
   }, [showSettings]);
+
+  const {
+    containerRef,
+    isFullscreen,
+    toggleFullscreen,
+    mediaStyle,
+    gestureFeedback,
+    onTouchStart,
+    onTouchEnd,
+  } = useImmersivePlayer({
+    enableVolume: false,
+    onInteraction: revealControls,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -135,28 +148,6 @@ export function StreamPlayer({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose, showCast, showSettings]);
 
-  useEffect(() => {
-    function onFullscreenChange() {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    }
-
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
-  }, []);
-
-  async function toggleFullscreen() {
-    const el = containerRef.current;
-    if (!el) return;
-
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    } else {
-      await el.requestFullscreen();
-    }
-
-    revealControls();
-  }
-
   async function handleDownload() {
     if (downloading || !downloadAvailable) return;
 
@@ -181,8 +172,13 @@ export function StreamPlayer({
           ref={containerRef}
           className="relative h-full w-full overflow-hidden bg-black"
           onMouseMove={revealControls}
-          onTouchStart={revealControls}
+          onTouchStart={(event) => {
+            revealControls();
+            onTouchStart(event);
+          }}
+          onTouchEnd={onTouchEnd}
         >
+          <PlayerGestureFeedback feedback={gestureFeedback} />
           <div
             className={cn(
               "absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/90 via-black/50 to-transparent px-4 pb-6 pt-4 transition-opacity duration-300 sm:px-6",
@@ -279,7 +275,7 @@ export function StreamPlayer({
             </div>
           )}
 
-          <div className="relative h-full w-full">
+          <div className="relative h-full w-full" style={mediaStyle}>
             {embedUrl && (
               <iframe
                 src={embedUrl}

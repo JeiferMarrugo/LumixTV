@@ -102,9 +102,10 @@ export function DetailSelect({
             role="listbox"
             className={cn(
               "fixed z-[200] overflow-hidden rounded-2xl",
-              "border border-white/[0.08]",
-              "bg-gradient-to-br from-zinc-900/98 via-zinc-950/99 to-black",
-              "shadow-[0_24px_60px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.05)]",
+              "border border-border bg-popover",
+              "shadow-[0_16px_40px_rgba(0,0,0,0.12)]",
+              "dark:border-white/[0.08] dark:bg-gradient-to-br dark:from-zinc-900/98 dark:via-zinc-950/99 dark:to-black",
+              "dark:shadow-[0_24px_60px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.05)]",
               "backdrop-blur-xl",
             )}
             style={{
@@ -113,8 +114,8 @@ export function DetailSelect({
               width: menuStyle.width,
             }}
           >
-            <div className="border-b border-white/[0.06] px-4 py-2.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            <div className="border-b border-border px-4 py-2.5 dark:border-white/[0.06]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {label}
               </p>
             </div>
@@ -136,8 +137,8 @@ export function DetailSelect({
                       className={cn(
                         "mx-1.5 flex w-[calc(100%-0.75rem)] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-all",
                         isSelected
-                          ? "bg-gold-500/15 font-medium text-gold-300 ring-1 ring-gold-500/25"
-                          : "text-zinc-300 hover:bg-white/[0.05] hover:text-white",
+                          ? "bg-gold-500/15 font-medium text-gold-700 ring-1 ring-gold-500/25 dark:text-gold-300"
+                          : "text-foreground hover:bg-muted dark:text-zinc-300 dark:hover:bg-white/[0.05] dark:hover:text-white",
                       )}
                     >
                       <span
@@ -145,7 +146,7 @@ export function DetailSelect({
                           "flex h-8 min-w-[2rem] shrink-0 items-center justify-center rounded-lg text-[11px] font-bold",
                           isSelected
                             ? "bg-gold-500 text-black"
-                            : "bg-white/[0.06] text-zinc-400",
+                            : "bg-muted text-muted-foreground dark:bg-white/[0.06] dark:text-zinc-400",
                         )}
                       >
                         {badge}
@@ -163,7 +164,7 @@ export function DetailSelect({
 
   return (
     <div className={cn("min-w-[9rem] flex-1 sm:flex-none", className)}>
-      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </span>
       <button
@@ -175,8 +176,9 @@ export function DetailSelect({
         onClick={() => setOpen((current) => !current)}
         className={cn(
           "flex h-12 w-full items-center justify-between gap-3 rounded-xl border px-3.5 text-sm transition-all duration-200",
-          "border-white/[0.08] bg-black/35 text-white",
-          "hover:border-gold-500/25 hover:bg-black/45",
+          "border-border bg-muted/60 text-foreground",
+          "hover:border-gold-500/30 hover:bg-muted",
+          "dark:border-white/[0.08] dark:bg-black/35 dark:text-white dark:hover:border-gold-500/25 dark:hover:bg-black/45",
           open && "border-gold-500/35 shadow-[0_0_0_3px_rgba(212,160,23,0.08)]",
           (disabled || loading) && "cursor-not-allowed opacity-50",
         )}
@@ -189,7 +191,7 @@ export function DetailSelect({
         ) : (
           <ChevronDown
             size={15}
-            className={cn("shrink-0 text-zinc-500 transition-transform duration-200", open && "rotate-180 text-gold-400")}
+            className={cn("shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-180 text-gold-600 dark:text-gold-400")}
           />
         )}
       </button>

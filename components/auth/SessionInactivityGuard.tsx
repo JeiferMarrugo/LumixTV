@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { SESSION_IDLE_TIMEOUT_MS } from "@/lib/session-inactivity";
+import { useAppStore } from "@/lib/store/use-app-store";
 
 const ACTIVITY_EVENTS = ["mousedown", "keydown", "scroll", "touchstart", "click"] as const;
 const MOUSEMOVE_THROTTLE_MS = 30_000;
@@ -11,6 +12,7 @@ const SESSION_REFRESH_MS = 5 * 60 * 1000;
 
 export function SessionInactivityGuard() {
   const router = useRouter();
+  const resetForUser = useAppStore((s) => s.resetForUser);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastMouseMoveRef = useRef(0);
   const lastSessionRefreshRef = useRef(0);
@@ -29,6 +31,7 @@ export function SessionInactivityGuard() {
       signingOutRef.current = true;
 
       try {
+        resetForUser(null);
         await authClient.signOut();
       } catch {
         // Si falla el sign-out remoto, igual redirigimos al login.
@@ -78,7 +81,7 @@ export function SessionInactivityGuard() {
       }
       window.removeEventListener("mousemove", onMouseMove);
     };
-  }, [router]);
+  }, [router, resetForUser]);
 
   return null;
 }

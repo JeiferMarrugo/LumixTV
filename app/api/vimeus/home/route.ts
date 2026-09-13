@@ -6,7 +6,7 @@ import { isVimeusApiConfigured } from "@/lib/vimeus/config";
 
 const getCachedFeatured = unstable_cache(
   async () => buildRandomVimeusFeaturedList(),
-  ["vimeus-home-featured"],
+  ["vimeus-home-featured-v3"],
   { revalidate: 120 },
 );
 

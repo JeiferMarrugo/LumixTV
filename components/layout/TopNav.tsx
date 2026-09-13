@@ -1,16 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { Suspense, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { Film, Home, Radio, Sparkles, Tv, User } from "lucide-react";
+import { Film, Home, Radio, Sparkles, Tv } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import {
   NotchNav,
   type NotchItemData,
 } from "@/components/ui/adaptive-notch-navigation-bar";
 import { SearchBar } from "@/components/features/SearchBar";
+import { NavClock } from "@/components/layout/NavClock";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { UserMenu } from "@/components/layout/UserMenu";
 
 const navItems: NotchItemData[] = [
@@ -23,19 +24,7 @@ const navItems: NotchItemData[] = [
 
 function SearchFallback() {
   return (
-    <div className="h-9 w-full animate-pulse rounded-xl bg-white/[0.03]" />
-  );
-}
-
-function MobileProfileButton() {
-  return (
-    <Link
-      href="/perfil"
-      aria-label="Perfil"
-      className="flex h-11 w-11 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-gold-400"
-    >
-      <User size={20} strokeWidth={1.75} />
-    </Link>
+    <div className="h-9 w-full animate-pulse rounded-xl bg-zinc-100 dark:bg-white/[0.03]" />
   );
 }
 
@@ -46,14 +35,16 @@ interface TopNavProps {
 export function TopNav({ isAuthenticated = false }: TopNavProps) {
   const pathname = usePathname();
 
+  const isLiveTv = pathname.startsWith("/en-vivo");
+
   const activeId = useMemo(() => {
     if (pathname === "/") return "home";
     if (pathname.startsWith("/peliculas")) return "movies";
     if (pathname.startsWith("/series")) return "series";
     if (pathname.startsWith("/anime")) return "anime";
-    if (pathname.startsWith("/en-vivo")) return "live";
+    if (isLiveTv) return "live";
     return "home";
-  }, [pathname]);
+  }, [pathname, isLiveTv]);
 
   return (
     <NotchNav
@@ -63,15 +54,18 @@ export function TopNav({ isAuthenticated = false }: TopNavProps) {
       logo={<Logo size="sm" align="left" compact />}
       rightContent={
         <>
+          <NavClock compact />
+          <ThemeToggle compact />
           <NotificationBell compact />
           <UserMenu serverAuthenticated={isAuthenticated} compact />
         </>
       }
-      mobileProfileSlot={<MobileProfileButton />}
       searchSlot={
-        <Suspense fallback={<SearchFallback />}>
-          <SearchBar embedded />
-        </Suspense>
+        isLiveTv ? undefined : (
+          <Suspense fallback={<SearchFallback />}>
+            <SearchBar embedded />
+          </Suspense>
+        )
       }
     />
   );

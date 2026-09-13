@@ -30,8 +30,23 @@ interface ChannelsResponse {
   error?: string;
 }
 
+function ChannelSkeleton() {
+  return (
+    <div className="animate-pulse overflow-hidden rounded-2xl border border-zinc-200/80 bg-white dark:border-white/[0.06] dark:bg-zinc-900/90">
+      <div className="aspect-[16/11] bg-gradient-to-br from-zinc-100 to-zinc-50 sm:aspect-[16/10] dark:from-zinc-900 dark:to-zinc-950" />
+      <div className="space-y-2 border-t border-zinc-100 p-3.5 dark:border-white/[0.06]">
+        <div className="h-4 w-3/4 rounded-md bg-zinc-200 dark:bg-white/[0.06]" />
+        <div className="flex gap-1.5">
+          <div className="h-5 w-16 rounded-md bg-zinc-100 dark:bg-white/[0.04]" />
+          <div className="h-5 w-9 rounded-md bg-zinc-100 dark:bg-white/[0.04]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LiveTvView() {
-  const [q] = useQueryState("q", liveSearchParams.q);
+  const [canal] = useQueryState("canal", liveSearchParams.canal);
   const [country] = useQueryState("country", liveSearchParams.country);
   const [category] = useQueryState("category", liveSearchParams.category);
   const [hd] = useQueryState("hd", liveSearchParams.hd);
@@ -49,7 +64,7 @@ export function LiveTvView() {
   useEffect(() => {
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, country, category, hd]);
+  }, [canal, country, category, hd]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -59,7 +74,7 @@ export function LiveTvView() {
       setError(null);
 
       const params = new URLSearchParams({ page: String(page) });
-      if (q) params.set("q", q);
+      if (canal) params.set("q", canal);
       if (country) params.set("country", country);
       if (category) params.set("category", category);
       if (hd) params.set("hd", "true");
@@ -89,10 +104,10 @@ export function LiveTvView() {
 
     void load();
     return () => controller.abort();
-  }, [q, country, category, hd, page]);
+  }, [canal, country, category, hd, page]);
 
   return (
-    <FadeIn className="px-8 py-8">
+    <FadeIn className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <PageHeader
         title="En Vivo"
         subtitle="Canales de televisión abierta, noticias y deportes en directo"
@@ -101,7 +116,13 @@ export function LiveTvView() {
 
       <LiveTvFilters categories={categories} countries={countries} />
 
-      {loading && <StreamingLoader className="py-16" label="" size="sm" />}
+      {loading && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <ChannelSkeleton key={index} />
+          ))}
+        </div>
+      )}
 
       {error && !loading && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -110,11 +131,12 @@ export function LiveTvView() {
       )}
 
       {!loading && !error && items.length > 0 && (
-        <FadeInStagger className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <FadeInStagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {items.map((channel) => (
             <StaggerItem key={channel.id}>
               <LiveChannelCard
                 channel={channel}
+                compact
                 onSelect={(id) => setActiveChannel({ id, name: channel.name })}
               />
             </StaggerItem>
@@ -123,30 +145,30 @@ export function LiveTvView() {
       )}
 
       {!loading && !error && items.length === 0 && (
-        <p className="py-12 text-center text-zinc-500">
+        <p className="py-12 text-center text-sm text-zinc-500">
           No se encontraron canales con esos filtros.
         </p>
       )}
 
       {!loading && !error && totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-4">
+        <div className="mt-8 flex items-center justify-center gap-3 sm:gap-4">
           <button
             type="button"
             disabled={page <= 1}
             onClick={() => setPage(Math.max(1, page - 1))}
-            className="flex items-center gap-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-zinc-300 transition-colors hover:border-gold-500/50 disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-gold-500/40 hover:text-gold-700 disabled:opacity-40 sm:px-4 dark:border-border-subtle dark:bg-transparent dark:text-zinc-300"
           >
             <ChevronLeft size={16} />
             Anterior
           </button>
-          <span className="text-sm text-zinc-500">
-            Página {page} de {totalPages}
+          <span className="text-xs text-zinc-600 sm:text-sm dark:text-zinc-500">
+            {page} / {totalPages}
           </span>
           <button
             type="button"
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
-            className="flex items-center gap-1 rounded-lg border border-border-subtle px-4 py-2 text-sm text-zinc-300 transition-colors hover:border-gold-500/50 disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-gold-500/40 hover:text-gold-700 disabled:opacity-40 sm:px-4 dark:border-border-subtle dark:bg-transparent dark:text-zinc-300"
           >
             Siguiente
             <ChevronRight size={16} />
@@ -159,9 +181,8 @@ export function LiveTvView() {
           channelId={activeChannel.id}
           channelName={activeChannel.name}
           onClose={() => setActiveChannel(null)}
-          onSelectRelated={(id) => {
-            const related = items.find((item) => item.id === id);
-            setActiveChannel({ id, name: related?.name ?? id });
+          onSelectRelated={(id, name) => {
+            setActiveChannel({ id, name });
           }}
         />
       )}

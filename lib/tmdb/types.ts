@@ -40,6 +40,8 @@ export interface TmdbFeatured {
   year: number;
   rating: string;
   image: string;
+  tagline?: string;
+  quality?: string;
 }
 
 export interface TmdbMovieDetail {

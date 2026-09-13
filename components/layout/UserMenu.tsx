@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ChevronDown, LogOut, Settings, Shield, User } from "lucide-react";
+import { ChevronDown, Download, LogOut, Settings, Shield, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { isSuperAdmin } from "@/lib/roles";
+import { useAppStore } from "@/lib/store/use-app-store";
 
 export function UserMenu({
   serverAuthenticated = false,
@@ -20,6 +21,7 @@ export function UserMenu({
   const { data: session, isPending } = authClient.useSession();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const resetForUser = useAppStore((s) => s.resetForUser);
   const [menuStyle, setMenuStyle] = useState<{ top: number; right: number } | null>(null);
 
   const isAuthenticated = Boolean(session?.user) || serverAuthenticated;
@@ -79,6 +81,7 @@ export function UserMenu({
 
   async function handleSignOut() {
     setSigningOut(true);
+    resetForUser(null);
     await authClient.signOut();
     setSigningOut(false);
     setOpen(false);
@@ -101,8 +104,8 @@ export function UserMenu({
               style={{ top: menuStyle.top, right: menuStyle.right }}
             >
               <div className="border-b border-border-subtle px-4 py-3">
-                <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-                <p className="truncate text-xs text-zinc-500">{user.email}</p>
+                <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{user.name}</p>
+                <p className="truncate text-xs text-zinc-600 dark:text-zinc-500">{user.email}</p>
                 {superAdmin && (
                   <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-gold-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold-500">
                     <Shield size={10} />
@@ -123,17 +126,26 @@ export function UserMenu({
               <Link
                 href="/perfil"
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-zinc-400 transition-colors hover:bg-surface-overlay hover:text-white"
+                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-surface-overlay dark:hover:text-white"
               >
                 <Settings size={16} />
                 Editar perfil
+              </Link>
+
+              <Link
+                href="/descargas"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-surface-overlay dark:hover:text-white"
+              >
+                <Download size={16} />
+                Mis descargas
               </Link>
 
               {superAdmin && (
                 <Link
                   href="/admin/usuarios"
                   onClick={() => setOpen(false)}
-                  className="flex w-full items-center gap-2 px-4 py-3 text-sm text-zinc-400 transition-colors hover:bg-surface-overlay hover:text-gold-500"
+                  className="flex w-full items-center gap-2 px-4 py-3 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-gold-700 dark:text-zinc-400 dark:hover:bg-surface-overlay dark:hover:text-gold-500"
                 >
                   <Shield size={16} />
                   Gestionar usuarios
@@ -144,7 +156,7 @@ export function UserMenu({
                 type="button"
                 onClick={() => void handleSignOut()}
                 disabled={signingOut}
-                className="flex w-full items-center gap-2 border-t border-border-subtle px-4 py-3 text-sm text-zinc-400 transition-colors hover:bg-surface-overlay hover:text-red-400"
+                className="flex w-full items-center gap-2 border-t border-border-subtle px-4 py-3 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-red-600 dark:text-zinc-400 dark:hover:bg-surface-overlay dark:hover:text-red-400"
               >
                 <LogOut size={16} />
                 {signingOut ? "Cerrando sesión..." : "Cerrar sesión"}
@@ -163,7 +175,7 @@ export function UserMenu({
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-2 text-sm transition-colors ${
           compact
-            ? "h-8 rounded-full pl-1 pr-2 hover:bg-white/[0.06]"
+            ? "h-8 rounded-full pl-1 pr-2 hover:bg-zinc-100 dark:hover:bg-white/[0.06]"
             : "h-9 rounded-full border border-gold-500/30 bg-surface-overlay pl-1.5 pr-3 hover:border-gold-500/60"
         }`}
       >
@@ -175,7 +187,7 @@ export function UserMenu({
           {displayName.charAt(0).toUpperCase()}
         </span>
         {!compact && (
-          <span className="max-w-[100px] truncate font-medium text-white">
+          <span className="max-w-[100px] truncate font-medium text-zinc-900 dark:text-white">
             {displayName}
           </span>
         )}

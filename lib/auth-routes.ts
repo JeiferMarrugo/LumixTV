@@ -7,7 +7,10 @@ export function isAuthPublicPath(pathname: string) {
 }
 
 export function isAuthPublicApiPath(pathname: string) {
-  return pathname.startsWith("/api/auth");
+  return (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/live-tv/hls")
+  );
 }
 
 export function buildLoginUrl(pathname: string, origin: string) {

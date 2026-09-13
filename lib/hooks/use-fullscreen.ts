@@ -24,8 +24,21 @@ export function useFullscreen() {
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
+        try {
+          screen.orientation?.unlock?.();
+        } catch {
+          /* ignore */
+        }
       } else {
         await el.requestFullscreen();
+        try {
+          const orientation = screen.orientation as ScreenOrientation & {
+            lock?: (o: "landscape" | "portrait") => Promise<void>;
+          };
+          await orientation?.lock?.("landscape");
+        } catch {
+          /* ignore */
+        }
       }
     } catch {
       // Browser blocked or unsupported

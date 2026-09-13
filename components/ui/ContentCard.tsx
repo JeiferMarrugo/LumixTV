@@ -22,9 +22,9 @@ export function ContentCard({ item }: ContentCardProps) {
   }
 
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="group block text-zinc-900 dark:text-zinc-100">
       <article>
-        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-white/[0.06] bg-surface-overlay shadow-[0_8px_32px_rgba(0,0,0,0.45)] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-gold-500/25 group-hover:shadow-[0_16px_40px_rgba(212,160,23,0.12)]">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-border bg-muted shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-gold-500/30 group-hover:shadow-[0_16px_40px_rgba(212,160,23,0.12)] dark:border-white/[0.06] dark:bg-surface-overlay dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
           <Image
             src={item.image}
             alt={item.title}
@@ -47,7 +47,7 @@ export function ContentCard({ item }: ContentCardProps) {
             </button>
           </div>
 
-          <div className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full border border-gold-500/20 bg-black/60 px-2.5 py-1 text-xs font-bold text-gold-400 backdrop-blur-md">
+          <div className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full border border-gold-500/25 bg-background/90 px-2.5 py-1 text-xs font-bold text-gold-700 backdrop-blur-md dark:border-gold-500/20 dark:bg-black/60 dark:text-gold-400">
             <Star size={11} className="fill-gold-400 text-gold-400" />
             {item.rating.toFixed(1)}
           </div>
@@ -55,14 +55,14 @@ export function ContentCard({ item }: ContentCardProps) {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-500/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
 
-        <h3 className="mt-3 truncate text-sm font-semibold tracking-wide text-white transition-colors group-hover:text-gold-400">
+        <h3 className="mt-3 truncate text-sm font-semibold tracking-wide text-zinc-900 transition-colors group-hover:text-gold-700 dark:text-zinc-100 dark:group-hover:text-gold-400">
           {item.title}
         </h3>
         <div className="mt-2 flex gap-2">
-          <span className="rounded-full border border-white/5 bg-white/[0.04] px-2.5 py-0.5 text-[11px] text-zinc-400">
+          <span className="rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-[11px] text-zinc-600 dark:border-white/5 dark:bg-white/[0.04] dark:text-zinc-400">
             {item.genre}
           </span>
-          <span className="rounded-full border border-white/5 bg-white/[0.04] px-2.5 py-0.5 text-[11px] text-zinc-500">
+          <span className="rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-[11px] text-zinc-600 dark:border-white/5 dark:bg-white/[0.04] dark:text-zinc-400">
             {item.year}
           </span>
         </div>

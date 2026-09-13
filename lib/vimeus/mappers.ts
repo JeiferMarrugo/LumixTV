@@ -26,7 +26,7 @@ export function mapVimeusListingItem(
     id: contentId(item, contentType),
     title: itemTitle(item),
     genre: genreLabel(contentType),
-    year: new Date(item.synced_at ?? Date.now()).getFullYear(),
+    year: 0,
     rating: 0,
     image: poster ?? backdrop ?? "https://image.tmdb.org/t/p/w500/wwemzKWzjKYJFfCeiB57N3fzImp.jpg",
     type: contentType === "anime" ? "anime" : contentType === "movie" ? "movie" : "series",
@@ -45,7 +45,7 @@ export function mapVimeusFeatured(item: VimeusRawItem, fallbackType: VimeusConte
     title: itemTitle(item),
     description: item.quality ? `Disponible en ${item.quality}.` : "Disponible para reproducir en LumixTV.",
     genre: genreLabel(contentType),
-    year: new Date(item.synced_at ?? Date.now()).getFullYear(),
+    year: 0,
     rating: item.quality ?? "HD",
     image: backdrop ?? poster ?? "https://image.tmdb.org/t/p/w1280/wwemzKWzjKYJFfCeiB57N3fzImp.jpg",
   };

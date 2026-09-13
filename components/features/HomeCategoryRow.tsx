@@ -148,13 +148,13 @@ export function HomeCategoryRow({ category }: HomeCategoryRowProps) {
     <section>
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <h2 className="truncate text-lg font-bold text-white">{category.title}</h2>
+          <h2 className="truncate text-lg font-bold text-zinc-900 dark:text-white">{category.title}</h2>
           {category.badge && (
             <span className="shrink-0 rounded bg-gold-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
               {category.badge}
             </span>
           )}
-          <span className="hidden text-xs text-zinc-500 sm:inline">
+          <span className="hidden text-xs text-zinc-600 dark:text-zinc-500 sm:inline">
             Página {pageIndex + 1}
           </span>
         </div>
@@ -168,8 +168,8 @@ export function HomeCategoryRow({ category }: HomeCategoryRowProps) {
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-full border transition-all",
               canGoBack
-                ? "border-white/15 bg-white/5 text-white hover:border-gold-500/40 hover:bg-gold-500/10 hover:text-gold-400"
-                : "cursor-not-allowed border-white/5 bg-white/[0.02] text-zinc-600",
+                ? "border-border bg-muted text-foreground hover:border-gold-500/40 hover:bg-gold-500/10 hover:text-gold-600 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:text-gold-400"
+                : "cursor-not-allowed border-border bg-muted/40 text-muted-foreground dark:border-white/5 dark:bg-white/[0.02] dark:text-zinc-600",
             )}
           >
             <ChevronLeft size={18} />
@@ -179,7 +179,7 @@ export function HomeCategoryRow({ category }: HomeCategoryRowProps) {
             onClick={() => void handleNext()}
             disabled={fetching}
             aria-label="Ver más títulos"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition-all hover:border-gold-500/40 hover:bg-gold-500/10 hover:text-gold-400 disabled:cursor-wait disabled:opacity-60"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted text-foreground transition-all hover:border-gold-500/40 hover:bg-gold-500/10 hover:text-gold-600 disabled:cursor-wait disabled:opacity-60 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:text-gold-400"
           >
             {fetching ? <Loader2 size={16} className="animate-spin" /> : <ChevronRight size={18} />}
           </button>
